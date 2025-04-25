@@ -1,0 +1,605 @@
+// IDResultsDisplay presents the extracted data from an ID document in a tabbed interface.
+// It organizes and displays summary info, all fields, MRZ, barcode, and the document image.
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  ResultCard,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  User,
+  Calendar,
+  Flag,
+  FileText,
+  CreditCard,
+  Fingerprint,
+  Barcode,
+  ArrowRight,
+  ClipboardCopy,
+  BookCopy,
+  ShieldAlert,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+
+interface ExtractedData {
+  status: string;
+  documentImage?: string;
+  classification?: {
+    documentClass?: string;
+    documentType?: string;
+    countryCode?: string;
+  };
+  data?: {
+    textField?: Array<{
+      type: string;
+      value: string;
+      _id?: string;
+    }>;
+    dateField?: Array<{
+      type: string;
+      value: string;
+      date?: {
+        day: number;
+        month: number;
+        year: number;
+      };
+      _id?: string;
+    }>;
+    sexField?: Array<{
+      value: string;
+      sex: string;
+      _id?: string;
+    }>;
+    visualField?: Array<{
+      type: string;
+      image: string;
+    }>;
+    mrz?: {
+      status: string;
+      fields: Record<string, string>;
+    };
+    pdf417Barcode?: Record<string, string>;
+  };
+  detection?: {
+    status: string;
+  };
+}
+
+interface IDResultsDisplayProps {
+  extractionData: ExtractedData | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
+const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
+  extractionData,
+  isLoading,
+  error,
+}) => {
+  // State for managing the active tab in the results UI
+  const [activeTab, setActiveTab] = useState("summary");
+
+  if (isLoading) {
+    // Show loading skeleton while processing
+    return (
+      <div className="my-8 p-8 bg-white rounded-lg shadow-sm flex flex-col items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="h-8 w-64 bg-gray-200 rounded mb-4"></div>
+          <div className="h-40 w-full max-w-md bg-gray-200 rounded"></div>
+        </div>
+        <p className="mt-6 text-idnorm-lightText">Processing your ID...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    // Show error card if extraction failed
+    return (
+      <Card className="my-8 border-red-200">
+        <CardHeader className="bg-red-50">
+          <CardTitle className="flex items-center gap-2 text-red-600">
+            <ShieldAlert size={24} />
+            Error Processing ID
+          </CardTitle>
+          <CardDescription>
+            We encountered an issue while extracting data from your ID
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <p className="text-idnorm-lightText">{error}</p>
+        </CardContent>
+        <CardFooter>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            Try Again
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  }
+
+  if (!extractionData) {
+    // No data to display
+    return null;
+  }
+
+  const documentImage = extractionData.documentImage
+    ? `data:image/jpeg;base64,${extractionData.documentImage}`
+    : null;
+
+  // Organize fields by type
+  const fieldDict: Record<
+    string,
+    {
+      type: string;
+      value: string;
+      _id?: string;
+      date?: { day: number; month: number; year: number };
+      sex?: string;
+    }
+  > = {};
+
+  // Process text fields
+  if (extractionData.data?.textField) {
+    for (const item of extractionData.data.textField) {
+      if (item.type === "TYPE_SIGNATURE") continue;
+
+      const newItem = { ...item };
+      newItem._id = newItem.type.replace(/_/g, "-");
+      fieldDict[newItem.type] = newItem;
+    }
+  }
+
+  // Process date fields
+  if (extractionData.data?.dateField) {
+    for (const item of extractionData.data.dateField) {
+      const newItem = { ...item };
+      newItem._id = newItem.type.replace(/_/g, "-");
+      fieldDict[newItem.type] = newItem;
+    }
+  }
+
+  // Process sex fields
+  if (extractionData.data?.sexField) {
+    let dummy_id = 0;
+    for (const item of extractionData.data.sexField) {
+      const newItem = {
+        ...item,
+        type: "TYPE_SEX", // Add the type property that was missing
+      };
+      newItem._id = String(dummy_id);
+      fieldDict[newItem.type] = newItem;
+      dummy_id += 1;
+    }
+  }
+
+  // Extract visual fields
+  const faceImage = extractionData.data?.visualField?.find(
+    (item) => item.type === "TYPE_FACE_PHOTO"
+  )?.image;
+  const signatureImage = extractionData.data?.visualField?.find(
+    (item) => item.type === "TYPE_SIGNATURE"
+  )?.image;
+
+  // Extract MRZ and barcode data
+  const mrzFields =
+    extractionData.data?.mrz?.status === "STATUS_OK"
+      ? Object.entries(extractionData.data.mrz.fields || {}).filter(
+          ([_, value]) => value !== ""
+        )
+      : [];
+
+  const barcodeFields = extractionData.data?.pdf417Barcode
+    ? Object.entries(extractionData.data.pdf417Barcode).filter(
+        ([_, value]) => value !== ""
+      )
+    : [];
+
+  // Extract classifications
+  const classifications = extractionData.classification
+    ? Object.entries(extractionData.classification)
+        .filter(([_, value]) => value && value !== "NOT_AVAILABLE")
+        .map(([key, value]) => ({
+          key,
+          value: value
+            .replace(/COUNTRY_/g, "")
+            .replace(/DOCUMENT_TYPE_/g, "")
+            .replace(/TERRITORY_/g, ""),
+        }))
+    : [];
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard
+      .writeText(text)
+      .then(() => toast.success("Copied to clipboard"))
+      .catch(() => toast.error("Failed to copy"));
+  };
+
+  return (
+    <div className="my-8" id="results-section">
+      {/* Tabbed interface for viewing different aspects of the extracted data */}
+      <h2 className="text-2xl font-bold text-center mb-6">
+        ID Extraction Results
+      </h2>
+
+      <Tabs
+        defaultValue="summary"
+        className="w-full"
+        onValueChange={setActiveTab}
+      >
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="summary">Summary</TabsTrigger>
+          <TabsTrigger value="fields">Fields</TabsTrigger>
+          <TabsTrigger value="mrz">MRZ Data</TabsTrigger>
+          <TabsTrigger value="barcode">Barcode</TabsTrigger>
+          <TabsTrigger value="document">Document</TabsTrigger>
+        </TabsList>
+
+        {/* Summary Tab */}
+        <TabsContent value="summary">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="md:col-span-2">
+              <CardHeader>
+                <CardTitle>Document Information</CardTitle>
+                <CardDescription>
+                  Key information extracted from your ID
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">
+                      Full Name
+                    </h4>
+                    <p className="text-lg font-medium">
+                      {fieldDict["TYPE_FULL_NAME"]?.value ||
+                        (fieldDict["TYPE_FIRST_NAME"] &&
+                        fieldDict["TYPE_LAST_NAME"]
+                          ? `${fieldDict["TYPE_FIRST_NAME"].value} ${fieldDict["TYPE_LAST_NAME"].value}`
+                          : "Not available")}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">
+                      Date of Birth
+                    </h4>
+                    <p className="text-lg font-medium">
+                      {fieldDict["TYPE_DATE_OF_BIRTH"]?.value ||
+                        "Not available"}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">
+                      Nationality
+                    </h4>
+                    <p className="text-lg font-medium">
+                      {fieldDict["TYPE_NATIONALITY"]?.value || "Not available"}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">
+                      Gender/Sex
+                    </h4>
+                    <p className="text-lg font-medium">
+                      {fieldDict["TYPE_SEX"]?.value || "Not available"}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">
+                      ID Number
+                    </h4>
+                    <p className="text-lg font-medium">
+                      {fieldDict["TYPE_DOCUMENT_NUMBER"]?.value ||
+                        "Not available"}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">
+                      Expiry Date
+                    </h4>
+                    <p className="text-lg font-medium">
+                      {fieldDict["TYPE_EXPIRY_DATE"]?.value || "Not available"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                    Document Type
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {classifications.map(({ key, value }) => (
+                      <div
+                        key={key}
+                        className="bg-blue-50 text-blue-800 px-3 py-1 rounded-full text-sm"
+                      >
+                        {value}
+                      </div>
+                    ))}
+                    {classifications.length === 0 && (
+                      <p className="text-muted-foreground">
+                        No classification available
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    copyToClipboard(
+                      JSON.stringify(
+                        {
+                          name:
+                            fieldDict["TYPE_FULL_NAME"]?.value ||
+                            (fieldDict["TYPE_FIRST_NAME"] &&
+                            fieldDict["TYPE_LAST_NAME"]
+                              ? `${fieldDict["TYPE_FIRST_NAME"].value} ${fieldDict["TYPE_LAST_NAME"].value}`
+                              : undefined),
+                          dob: fieldDict["TYPE_DATE_OF_BIRTH"]?.value,
+                          nationality: fieldDict["TYPE_NATIONALITY"]?.value,
+                          sex: fieldDict["TYPE_SEX"]?.value,
+                          idNumber: fieldDict["TYPE_DOCUMENT_NUMBER"]?.value,
+                          expiryDate: fieldDict["TYPE_EXPIRY_DATE"]?.value,
+                          documentType: classifications.map((c) => c.value),
+                        },
+                        null,
+                        2
+                      )
+                    )
+                  }
+                >
+                  <ClipboardCopy className="mr-2 h-4 w-4" />
+                  Copy Data
+                </Button>
+              </CardFooter>
+            </Card>
+
+            <div className="flex flex-col gap-4">
+              {faceImage && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">ID Photo</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex justify-center">
+                    <img
+                      src="/placeholder.svg"
+                      alt="ID Face Photo"
+                      className="max-h-48 object-contain rounded"
+                    />
+                  </CardContent>
+                </Card>
+              )}
+
+              {signatureImage && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Signature</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex justify-center bg-gray-50 p-4 rounded">
+                    <img
+                      src="/placeholder.svg"
+                      alt="ID Signature"
+                      className="max-h-24 object-contain"
+                    />
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Fields Tab */}
+        <TabsContent value="fields">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText size={18} />
+                Extracted Text Fields
+              </CardTitle>
+              <CardDescription>
+                All text fields extracted from the document
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.values(fieldDict).map((field) => (
+                  <ResultCard key={field._id}>
+                    <div className="bg-muted px-4 py-2 border-b flex justify-between items-center">
+                      <h4 className="font-medium text-sm">
+                        {field.type.replace("TYPE_", "").replace(/_/g, " ")}
+                      </h4>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0"
+                        onClick={() => copyToClipboard(field.value)}
+                      >
+                        <ClipboardCopy size={14} />
+                      </Button>
+                    </div>
+                    <div className="p-4">
+                      <p className="font-medium">{field.value}</p>
+
+                      {"date" in field && field.date && (
+                        <div className="mt-1 text-sm text-muted-foreground">
+                          {field.date.day > 0 && (
+                            <span>Day: {field.date.day} </span>
+                          )}
+                          {field.date.month > 0 && (
+                            <span>Month: {field.date.month} </span>
+                          )}
+                          {field.date.year > 0 && (
+                            <span>Year: {field.date.year}</span>
+                          )}
+                        </div>
+                      )}
+
+                      {"sex" in field && field.sex !== "UNKNOWN" && (
+                        <div className="mt-1 text-sm text-muted-foreground">
+                          Gender: {field.sex.toLowerCase()}
+                        </div>
+                      )}
+                    </div>
+                  </ResultCard>
+                ))}
+
+                {Object.values(fieldDict).length === 0 && (
+                  <div className="col-span-2 py-8 text-center text-muted-foreground">
+                    No text fields were extracted from this document
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* MRZ Tab */}
+        <TabsContent value="mrz">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookCopy size={18} />
+                Machine Readable Zone (MRZ) Data
+              </CardTitle>
+              <CardDescription>
+                Data extracted from the document's machine readable zone
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {mrzFields.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {mrzFields.map(([key, value]) => (
+                    <ResultCard key={key}>
+                      <div className="bg-muted px-4 py-2 border-b flex justify-between items-center">
+                        <h4 className="font-medium text-sm">{key}</h4>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0"
+                          onClick={() => copyToClipboard(value)}
+                        >
+                          <ClipboardCopy size={14} />
+                        </Button>
+                      </div>
+                      <div className="p-4">
+                        <p className="font-medium font-mono">{value}</p>
+                      </div>
+                    </ResultCard>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-8 text-center text-muted-foreground">
+                  No MRZ data was extracted from this document or the document
+                  doesn't contain an MRZ
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Barcode Tab */}
+        <TabsContent value="barcode">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Barcode size={18} />
+                Barcode Data
+              </CardTitle>
+              <CardDescription>
+                Data extracted from PDF417 or other barcodes on the document
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {barcodeFields.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {barcodeFields.map(([key, value]) => (
+                    <ResultCard key={key}>
+                      <div className="bg-muted px-4 py-2 border-b flex justify-between items-center">
+                        <h4 className="font-medium text-sm">{key}</h4>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0"
+                          onClick={() => copyToClipboard(value)}
+                        >
+                          <ClipboardCopy size={14} />
+                        </Button>
+                      </div>
+                      <div className="p-4">
+                        <p className="font-medium font-mono break-all">
+                          {value}
+                        </p>
+                      </div>
+                    </ResultCard>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-8 text-center text-muted-foreground">
+                  No barcode data was extracted from this document
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Document Tab */}
+        <TabsContent value="document">
+          <Card>
+            <CardHeader>
+              <CardTitle>Document Image</CardTitle>
+              <CardDescription>
+                The processed document image with detected regions
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-center p-0">
+              {documentImage ? (
+                <img
+                  src="/placeholder.svg"
+                  alt="Document"
+                  className="max-w-full object-contain rounded-b-lg"
+                  style={{ maxHeight: "500px" }}
+                />
+              ) : (
+                <div className="py-12 text-center text-muted-foreground w-full">
+                  No document image available
+                </div>
+              )}
+            </CardContent>
+            <CardFooter className="pt-6">
+              <div className="w-full">
+                <h4 className="text-sm font-medium mb-2">
+                  Document Classification
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {classifications.map(({ key, value }) => (
+                    <div
+                      key={key}
+                      className="bg-blue-50 text-blue-800 px-3 py-1 rounded-full text-sm"
+                    >
+                      {key}: {value}
+                    </div>
+                  ))}
+                  {classifications.length === 0 && (
+                    <p className="text-muted-foreground">
+                      No classification available
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default IDResultsDisplay;
