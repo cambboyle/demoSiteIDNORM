@@ -13,8 +13,9 @@ const Support = () => {
           Support
         </h2>
         <p className="text-idnorm-lightText mb-12 max-w-2xl mx-auto text-center">
-          Have questions or need help with our document verification solution?
-          Our support team is ready to assist you.
+          Our experts will guide you in creating an execution plan to solve
+          customer acquisition, onboarding, fraud prevention, and global
+          compliance challenges.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">

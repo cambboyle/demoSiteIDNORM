@@ -128,9 +128,6 @@ const Index = () => {
               <span className="text-2xl font-bold text-idnorm-primary tracking-tight flex items-center gap-2">
                 idnorm
               </span>
-              <span className="text-xs text-idnorm-lightText mt-1">
-                Identity Data Extraction Platform
-              </span>
             </div>
             <nav>
               <ul className="flex flex-wrap justify-center gap-4 md:gap-8">
