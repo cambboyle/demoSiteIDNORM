@@ -123,7 +123,7 @@ const ExtractionProcessor: React.FC<ExtractionProcessorProps> = ({
           <Button
             onClick={processImage}
             disabled={!selectedImage || isProcessing}
-            className="px-6 py-2"
+            className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white"
           >
             {isProcessing ? (
               <>

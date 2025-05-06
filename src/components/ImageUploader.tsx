@@ -501,7 +501,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 style={
                   isMobile
                     ? { flex: 1, width: "100%", height: "auto", minHeight: 0 }
-                    : { background: '#fff' }
+                    : { background: "#fff" }
                 }
               />
             </div>
