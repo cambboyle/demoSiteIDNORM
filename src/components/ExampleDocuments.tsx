@@ -1,27 +1,32 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
-// Define example document URLs without hands
+// Define example document URLs with and without hands
 const EXAMPLE_DOCUMENTS = [
   {
     id: 1,
-    title: "Driver License",
-    url: "https://static.wixstatic.com/media/346a11_d0b5e1f8e204e83b0fb14d6188918a9~mv2.jpg",
+    title: "US Driver's License",
+    url: "/images/example_docs/nyc-drivers-license.png",
+    handUrl: "/images/example_docs/nyc-drivers-license-hand.jpg",
   },
   {
     id: 2,
-    title: "Passport",
-    url: "https://static.wixstatic.com/media/346a11_9a96ed562e2346f68cb923eac2678a18~mv2.jpg",
+    title: "German Driver's License",
+    url: "/images/example_docs/ger-drivers-license.jpg",
+    handUrl: "/images/example_docs/ger-drivers-license-hand.jpg",
   },
   {
     id: 3,
-    title: "ID Card",
-    url: "https://static.wixstatic.com/media/346a11_e4a732428d3d4be4b4f4243b7dd1bc80~mv2.jpg",
+    title: "Austrian ID Card",
+    url: "/images/example_docs/aut-id.jpg",
+    handUrl: "/images/example_docs/aut-id-hand.jpg",
   },
   {
     id: 4,
-    title: "Residence Permit",
-    url: "https://static.wixstatic.com/media/346a11_14a54322e0874f5696aca06cae72aa9d~mv2.jpg",
+    title: "Swiss Passport",
+    url: "/images/example_docs/sui-passport.webp",
+    handUrl: "/images/example_docs/sui-passport-hand.jpg",
   },
 ];
 
@@ -71,14 +76,16 @@ const ExampleDocuments = ({ onSelectExample }: ExampleDocumentsProps) => {
             <Card
               key={doc.id}
               className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow bg-white"
-              onClick={() => downloadImage(doc.url, doc.id)}
+              onClick={() => downloadImage(doc.handUrl, doc.id)}
             >
               <CardContent className="p-0 relative">
-                <img
-                  src="/placeholder.svg"
-                  alt={doc.title}
-                  className="w-full h-64 object-cover"
-                />
+                <AspectRatio ratio={1.6} className="bg-gray-100">
+                  <img
+                    src={doc.url}
+                    alt={doc.title}
+                    className="w-full h-full object-cover object-center"
+                  />
+                </AspectRatio>
                 <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 opacity-0 hover:opacity-100 transition-opacity">
                   <div className="text-white text-center">
                     <p className="font-medium text-lg mb-2">{doc.title}</p>

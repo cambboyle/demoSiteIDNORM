@@ -497,11 +497,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               <img
                 src={imageSrc}
                 alt="Your captured photo"
-                className="max-w-[calc(100%-30px)] max-h-[calc(100%-30px)] object-contain w-full h-auto"
+                className="max-w-[600px] max-h-[340px] object-contain rounded-xl shadow-lg border border-gray-200 bg-white"
                 style={
                   isMobile
                     ? { flex: 1, width: "100%", height: "auto", minHeight: 0 }
-                    : {}
+                    : { background: '#fff' }
                 }
               />
             </div>
