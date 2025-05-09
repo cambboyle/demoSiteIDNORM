@@ -261,7 +261,9 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                         (fieldDict["TYPE_FIRST_NAME"] &&
                         fieldDict["TYPE_LAST_NAME"]
                           ? `${fieldDict["TYPE_FIRST_NAME"].value} ${fieldDict["TYPE_LAST_NAME"].value}`
-                          : "Not available")}
+                          : fieldDict["TYPE_FIRST_NAME"]?.value ||
+                            fieldDict["TYPE_LAST_NAME"]?.value ||
+                            "Not available")}
                     </p>
                   </div>
                   <div>
@@ -270,6 +272,8 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                     </h4>
                     <p className="text-lg font-medium">
                       {fieldDict["TYPE_DATE_OF_BIRTH"]?.value ||
+                        extractionData.data?.mrz?.fields?.birthdate ||
+                        extractionData.data?.pdf417Barcode?.dateOfBirth ||
                         "Not available"}
                     </p>
                   </div>
@@ -278,7 +282,12 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                       Nationality
                     </h4>
                     <p className="text-lg font-medium">
-                      {fieldDict["TYPE_NATIONALITY"]?.value || "Not available"}
+                      {fieldDict["TYPE_NATIONALITY"]?.value ||
+                        extractionData.data?.mrz?.fields?.nationality ||
+                        extractionData.data?.pdf417Barcode?.nationality ||
+                        extractionData.data?.pdf417Barcode
+                          ?.countryIdentification ||
+                        "Not available"}
                     </p>
                   </div>
                   <div>
@@ -286,7 +295,59 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                       Gender/Sex
                     </h4>
                     <p className="text-lg font-medium">
-                      {fieldDict["TYPE_SEX"]?.value || "Not available"}
+                      {(() => {
+                        const sexFieldRaw = extractionData.data?.sexField;
+                        let sexValue: string | undefined = undefined;
+                        if (sexFieldRaw) {
+                          if (Array.isArray(sexFieldRaw)) {
+                            if (sexFieldRaw.length > 0) {
+                              sexValue =
+                                sexFieldRaw[0].sex &&
+                                sexFieldRaw[0].sex !== "UNKNOWN" &&
+                                sexFieldRaw[0].sex !== "UNSPECIFIED"
+                                  ? sexFieldRaw[0].sex
+                                  : sexFieldRaw[0].value &&
+                                    sexFieldRaw[0].value !== "UNKNOWN" &&
+                                    sexFieldRaw[0].value !== "UNSPECIFIED"
+                                  ? sexFieldRaw[0].value
+                                  : undefined;
+                            }
+                          } else if (
+                            typeof sexFieldRaw === "object" &&
+                            sexFieldRaw !== null
+                          ) {
+                            const obj: {
+                              sex?: string;
+                              segments?: Array<{ value?: string }>;
+                            } = sexFieldRaw;
+                            if (
+                              typeof obj.sex === "string" &&
+                              obj.sex !== "UNKNOWN" &&
+                              obj.sex !== "UNSPECIFIED"
+                            ) {
+                              sexValue = obj.sex;
+                            } else if (
+                              Array.isArray(obj.segments) &&
+                              obj.segments.length > 0
+                            ) {
+                              const seg = obj.segments[0];
+                              if (
+                                seg.value &&
+                                seg.value !== "UNKNOWN" &&
+                                seg.value !== "UNSPECIFIED"
+                              ) {
+                                sexValue = seg.value;
+                              }
+                            }
+                          }
+                        }
+                        return (
+                          sexValue ||
+                          extractionData.data?.mrz?.fields?.sex ||
+                          extractionData.data?.pdf417Barcode?.gender ||
+                          "Not available"
+                        );
+                      })()}
                     </p>
                   </div>
                   <div>
@@ -294,8 +355,18 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                       ID Number
                     </h4>
                     <p className="text-lg font-medium">
-                      {fieldDict["TYPE_DOCUMENT_NUMBER"]?.value ||
-                        "Not available"}
+                      {/* Try text fields, then MRZ, then barcode, then fallback */}
+                      {(() => {
+                        const idText =
+                          fieldDict["TYPE_DOCUMENT_NUMBER"]?.value ||
+                          fieldDict["TYPE_PERSONAL_IDENTITY_NUMBER"]?.value ||
+                          fieldDict["TYPE_ID_NUMBER"]?.value;
+                        const mrzId =
+                          extractionData.data?.mrz?.fields?.documentNumber;
+                        const barcodeId =
+                          extractionData.data?.pdf417Barcode?.customerId;
+                        return idText || mrzId || barcodeId || "Not available";
+                      })()}
                     </p>
                   </div>
                   <div>
@@ -370,7 +441,7 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                   </CardHeader>
                   <CardContent className="flex justify-center">
                     <img
-                      src="/placeholder.svg"
+                      src={`data:image/jpeg;base64,${faceImage}`}
                       alt="ID Face Photo"
                       className="max-h-48 object-contain rounded"
                     />
@@ -385,7 +456,7 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                   </CardHeader>
                   <CardContent className="flex justify-center bg-gray-50 p-4 rounded">
                     <img
-                      src="/placeholder.svg"
+                      src={`data:image/jpeg;base64,${signatureImage}`}
                       alt="ID Signature"
                       className="max-h-24 object-contain"
                     />

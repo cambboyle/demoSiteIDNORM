@@ -2,9 +2,7 @@
 // It manages the UI state for processing, error handling, and displaying results.
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  extractDocumentDataReal,
-} from "@/services/extractionService";
+import { extractDocumentDataReal } from "@/services/extractionService";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import IDResultsDisplay from "./IDResultsDisplay";
@@ -69,8 +67,9 @@ const ExtractionProcessor: React.FC<ExtractionProcessorProps> = ({
 
       // Call the extraction service (real backend)
       const result = await extractDocumentDataReal(base64Image);
-      // Only log a message if the real backend is used
+      // TEMP: Log the full backend response for debugging visual fields
       console.info("Connected to backend and received extraction result.");
+      console.log("Full backend response:", result.data.response);
       if (
         !result.data.response ||
         result.data.response.status !== "STATUS_OK" ||
