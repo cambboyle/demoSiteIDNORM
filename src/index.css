@@ -83,17 +83,21 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  html,
+  body,
+  * {
+    font-family: "Inter", sans-serif !important;
+  }
 }
 
 @layer base {
   * {
     @apply border-border;
-    font-family: "Inter", sans-serif;
   }
 
   body {
     @apply bg-background text-foreground;
-    font-family: "Inter", sans-serif;
   }
 }
 

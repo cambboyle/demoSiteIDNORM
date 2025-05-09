@@ -86,7 +86,7 @@ const ExampleDocuments = ({ onSelectExample }: ExampleDocumentsProps) => {
                     className="w-full h-full object-cover object-center"
                   />
                 </AspectRatio>
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 opacity-0 hover:opacity-100 transition-opacity">
+                <div className="absolute inset-0 flex items-center justify-center bg-[#333] bg-opacity-40 opacity-0 hover:opacity-100 transition-opacity">
                   <div className="text-white text-center">
                     <p className="font-medium text-lg mb-2">{doc.title}</p>
                     <span className="bg-idnorm-primary text-white px-3 py-1 rounded-full text-sm">

@@ -37,9 +37,14 @@ const Header = () => {
     <header className="bg-white shadow-sm py-4 sticky top-0 z-50">
       <div className="container mx-auto px-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-xl font-semibold text-idnorm-primary">
-            idnorm
-          </span>
+          <a href="/" className="flex items-center" aria-label="Home">
+            <img
+              src="/images/other/No-padding-Logo-horizontal.svg"
+              alt="idnorm logo"
+              className="h-8 w-auto"
+              style={{ maxWidth: 160 }}
+            />
+          </a>
           <span className="text-xs font-bold bg-idnorm-primary text-white px-2 py-0.5 rounded">
             DEMO
           </span>

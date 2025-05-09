@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Camera, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "../hooks/use-mobile";
+import { Button } from "@/components/ui/button";
 
 interface ImageUploaderProps {
   onImageUploaded: (imageDataUrl: string) => void;
@@ -442,7 +443,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 isMobile ? "gap-3 w-full" : "sm:flex-row gap-4"
               }`}
             >
-              <button
+              <Button
                 onClick={handleUploadClick}
                 className={`btn-primary flex items-center justify-center gap-2 ${
                   isMobile
@@ -464,13 +465,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                   <Upload size={20} />
                   <span className="flex-1 text-center">Upload image</span>
                 </span>
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleTakePhotoClick}
-                className={`btn-outline flex items-center justify-center gap-2 ${
-                  isMobile
-                    ? "w-full py-4 text-lg rounded-xl shadow-md transition active:scale-95 whitespace-nowrap"
-                    : ""
+                className={`bg-white border-2 border-[#333] text-[#333] hover:bg-[#f3f3f3] flex items-center justify-center gap-2 font-medium rounded-xl shadow-md transition active:scale-95 whitespace-nowrap ${
+                  isMobile ? "w-full py-4" : ""
                 }`}
                 style={
                   isMobile
@@ -487,7 +486,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                   <Camera size={20} />
                   <span className="flex-1 text-center">Take Photo</span>
                 </span>
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
@@ -513,7 +512,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               }`}
               style={isMobile ? { flex: 0, minHeight: 180 } : {}}
             >
-              <button
+              <Button
                 onClick={handleUploadClick}
                 className={`btn-primary ${
                   isMobile
@@ -523,8 +522,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 style={isMobile ? { minHeight: 48 } : {}}
               >
                 Upload New Image
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleTakePhotoClick}
                 className={`btn-outline ${
                   isMobile
@@ -534,21 +533,19 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 style={isMobile ? { minHeight: 48 } : {}}
               >
                 Retake Photo
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => {
                   resetPhoto();
                   onImageUploaded(null);
                 }}
-                className={`btn-outline text-red-600 border-red-300 hover:bg-red-50 ${
-                  isMobile
-                    ? "w-full py-4 text-lg rounded-xl flex justify-center items-center"
-                    : "flex justify-center items-center"
+                className={`bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-3 rounded-lg shadow-md transition-all duration-200 flex items-center justify-center text-sm ${
+                  isMobile ? "w-32" : "w-40"
                 }`}
                 style={isMobile ? { minHeight: 48 } : {}}
               >
                 Remove Image
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -565,10 +562,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             <div className="flex flex-col gap-4">
               <p>How would you like to take your photo?</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button onClick={startCamera} className="btn-primary">
+                <Button onClick={startCamera} className="btn-primary">
                   Use this device
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => {
                     setShowPhotoOptions(false);
                     setShowQrCode(true);
@@ -576,15 +573,15 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                   className="btn-outline"
                 >
                   Get QR code
-                </button>
+                </Button>
               </div>
             </div>
-            <button
+            <Button
               className="absolute top-2 right-2 text-2xl text-gray-500 hover:text-gray-700"
               onClick={closeAllModals}
             >
               &times;
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -601,7 +598,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             style={isMobile ? { top: 0, left: 0, borderRadius: 0 } : {}}
           >
             <h3
-              className={`text-xl font-semibold absolute top-0 left-0 right-0 p-2 bg-black bg-opacity-50 text-white z-10 ${
+              className={`text-xl font-semibold absolute top-0 left-0 right-0 p-2 bg-[#333] bg-opacity-50 text-white z-10 ${
                 isMobile ? "text-center" : ""
               }`}
             >
@@ -612,12 +609,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 <div
                   className={`w-full ${
                     isMobile ? "h-[calc(100vh-80px)]" : "h-[60vh]"
-                  } flex items-center justify-center bg-gray-900 text-white p-4 text-center`}
+                  } flex items-center justify-center bg-[#333] text-white p-4 text-center`}
                 >
                   <div>
                     <p className="mb-2 text-xl">Camera Error</p>
                     <p>{cameraError}</p>
-                    <button
+                    <Button
                       onClick={() => {
                         setCameraError(null);
                         startCamera();
@@ -625,7 +622,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                       className="mt-4 px-4 py-2 bg-white text-black rounded"
                     >
                       Retry
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ) : (
@@ -636,7 +633,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                   muted
                   className={`w-full object-cover ${
                     isMobile ? "h-[calc(100vh-120px)]" : "h-[60vh]"
-                  } bg-black`}
+                  } bg-[#333]`}
                   style={
                     isMobile
                       ? {
@@ -659,21 +656,17 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                   isMobile ? "fixed bottom-0 left-0 w-full z-20" : ""
                 }`}
               >
-                <button
+                <Button
                   onClick={capturePhoto}
-                  className={`rounded-full bg-white border-2 border-idnorm-primary flex items-center justify-center ${
-                    isMobile ? "w-20 h-20" : "w-16 h-16"
+                  className={`bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-lg shadow-md transition-all duration-200 flex items-center justify-center text-sm ${
+                    isMobile ? "w-32" : "w-40"
                   }`}
                   title="Take Photo"
                   disabled={!!cameraError || !isVideoReady}
                 >
-                  <div
-                    className={`${
-                      isMobile ? "w-16 h-16" : "w-12 h-12"
-                    } rounded-full bg-idnorm-primary`}
-                  ></div>
-                </button>
-                <button
+                  Take Photo
+                </Button>
+                <Button
                   onClick={() => {
                     stopCameraStream();
                     setShowCamera(false);
@@ -685,10 +678,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                   style={isMobile ? { minHeight: 48 } : {}}
                 >
                   Back
-                </button>
+                </Button>
               </div>
             </div>
-            <button
+            <Button
               className={`absolute top-2 right-2 z-20 text-2xl w-8 h-8 bg-white rounded-full text-gray-700 flex items-center justify-center ${
                 isMobile ? "" : ""
               }`}
@@ -698,7 +691,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               }}
             >
               &times;
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -719,10 +712,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               <div className="p-6 md:w-64">
                 <p className="font-medium mb-4">Is this photo OK?</p>
                 <div className="flex flex-col gap-3">
-                  <button onClick={confirmPhoto} className="btn-primary">
+                  <Button
+                    onClick={confirmPhoto}
+                    className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-lg shadow-md transition-all duration-200 flex items-center justify-center text-sm"
+                  >
                     Use this photo
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={() => {
                       setCapturedImageData(null);
                       setShowConfirmation(false);
@@ -731,11 +727,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                     className="btn-outline"
                   >
                     Retake photo
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
-            <button
+            <Button
               className="absolute top-2 right-2 text-2xl text-gray-500 hover:text-gray-700"
               onClick={() => {
                 setCapturedImageData(null);
@@ -743,7 +739,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               }}
             >
               &times;
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -763,7 +759,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               </div>
               <div className="text-left">
                 <p className="mb-4">Scan to access the site on mobile</p>
-                <button
+                <Button
                   onClick={() => {
                     setShowQrCode(false);
                     setShowPhotoOptions(true);
@@ -771,15 +767,15 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                   className="btn-outline"
                 >
                   Back
-                </button>
+                </Button>
               </div>
             </div>
-            <button
+            <Button
               className="absolute top-2 right-2 text-2xl text-gray-500 hover:text-gray-700"
               onClick={() => setShowQrCode(false)}
             >
               &times;
-            </button>
+            </Button>
           </div>
         </div>
       )}

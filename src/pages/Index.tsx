@@ -125,9 +125,17 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-8 md:gap-0 border-b border-gray-200 pb-6">
             <div className="flex flex-col items-center md:items-start gap-2">
-              <span className="text-2xl font-bold text-idnorm-primary tracking-tight flex items-center gap-2">
-                idnorm
-              </span>
+              <img
+                src="/images/other/No-padding-Logo-horizontal.svg"
+                alt="idnorm logo"
+                className="h-8 w-auto"
+                style={{ maxWidth: 160 }}
+              />
+              <img
+                src="/images/other/GDPR-CCPA.png"
+                alt="GDPR and CCPA Compliant"
+                className="h-10 w-auto mt-2"
+              />
             </div>
             <nav>
               <ul className="flex flex-wrap justify-center gap-4 md:gap-8">
