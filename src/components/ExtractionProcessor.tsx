@@ -2,7 +2,10 @@
 // It manages the UI state for processing, error handling, and displaying results.
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { extractDocumentData } from "@/services/extractionService";
+import {
+  extractDocumentData,
+  extractDocumentDataReal,
+} from "@/services/extractionService";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import IDResultsDisplay from "./IDResultsDisplay";
@@ -65,39 +68,46 @@ const ExtractionProcessor: React.FC<ExtractionProcessorProps> = ({
         ? selectedImage.split(",")[1]
         : selectedImage;
 
-      // Call the extraction service (mocked for demo)
-      const result = await extractDocumentData(base64Image);
-
-      if (!result.success) {
-        setError(
-          "Failed to process document. Please try again with a clearer image."
-        );
-      } else if (!result.data.response.detection) {
+      // Call the extraction service (real backend)
+      const result = await extractDocumentDataReal(base64Image);
+      console.info("Connected to backend and received extraction result.");
+      if (
+        !result.data.response ||
+        result.data.response.status !== "STATUS_OK" ||
+        !result.data.response.detection
+      ) {
         setError(
           "Failed to detect a document in the image. Please ensure the document is clearly visible."
         );
-      } else {
-        // Save the extraction result and show results UI
-        setExtractionResult({
-          ...result.data.response,
-          data: {
-            ...result.data.response.data,
-            sexField: result.data.response.data?.sexField?.map((field) => ({
-              value: field.value,
-              sex: field.sex,
-              // Not including _id since it doesn't exist in the source data
-            })),
-            visualField: result.data.response.data?.visualField?.map(
-              (field) => ({
-                type: field.type,
-                image: field.image, // Using 'image' instead of 'value'
-              })
-            ),
-            pdf417Barcode: result.data.response.data?.pdf417Barcode || {},
-          },
-        });
-        setShowResults(true);
+        setIsProcessing(false);
+        return;
       }
+
+      // Save the extraction result and show results UI
+      setExtractionResult({
+        ...result.data.response,
+        data: {
+          ...result.data.response.data,
+          sexField: Array.isArray(result.data.response.data?.sexField)
+            ? result.data.response.data.sexField.map((field) => ({
+                value: field.value,
+                sex: field.sex,
+              }))
+            : result.data.response.data?.sexField
+            ? [result.data.response.data.sexField]
+            : [],
+          visualField: Array.isArray(result.data.response.data?.visualField)
+            ? result.data.response.data.visualField.map((field) => ({
+                type: field.type,
+                image: field.image,
+              }))
+            : result.data.response.data?.visualField
+            ? [result.data.response.data.visualField]
+            : [],
+          pdf417Barcode: result.data.response.data?.pdf417Barcode || {},
+        },
+      });
+      setShowResults(true);
     } catch (err) {
       // Catch-all for unexpected errors
       console.error("Error processing image:", err);

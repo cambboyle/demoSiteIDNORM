@@ -300,3 +300,42 @@ export const extractDocumentData = async (
     }, 1500); // Simulate a 1.5 second API delay
   });
 };
+
+// Real API call to backend for document extraction
+export const extractDocumentDataReal = async (
+  imageBase64: string
+): Promise<ExtractionResult> => {
+  try {
+    const response = await fetch("/api/extract", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ base64Image: imageBase64 }),
+    });
+    if (!response.ok) {
+      return {
+        success: false,
+        data: {
+          request: {},
+          response: {
+            status: "STATUS_ERROR",
+            detection: { status: "STATUS_ERROR" },
+          },
+        },
+      };
+    }
+    const result = await response.json();
+    // Adapt backend response to ExtractionResult if needed
+    return result;
+  } catch (error) {
+    return {
+      success: false,
+      data: {
+        request: {},
+        response: {
+          status: "STATUS_ERROR",
+          detection: { status: "STATUS_ERROR" },
+        },
+      },
+    };
+  }
+};
