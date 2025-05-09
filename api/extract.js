@@ -1,9 +1,11 @@
 // Vercel serverless function for document extraction
-import fetch from 'node-fetch';
+import fetch from "node-fetch";
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, message: 'Method not allowed' });
+  if (req.method !== "POST") {
+    return res
+      .status(405)
+      .json({ success: false, message: "Method not allowed" });
   }
 
   const { base64Image } = req.body;
@@ -12,7 +14,9 @@ export default async function handler(req, res) {
   const idexServerUrl = process.env.IDEX_SERVER_URL;
 
   if (!base64Image) {
-    return res.status(400).json({ success: false, message: 'No image provided.' });
+    return res
+      .status(400)
+      .json({ success: false, message: "No image provided." });
   }
 
   try {
@@ -21,8 +25,8 @@ export default async function handler(req, res) {
         returnDocumentImage: {},
         returnVisualFields: {
           typeFilter: [
-            'VISUAL_FIELD_TYPE_FACE_PHOTO',
-            'VISUAL_FIELD_TYPE_SIGNATURE',
+            "VISUAL_FIELD_TYPE_FACE_PHOTO",
+            "VISUAL_FIELD_TYPE_SIGNATURE",
           ],
         },
       },
@@ -30,10 +34,10 @@ export default async function handler(req, res) {
     };
 
     const response = await fetch(idexServerUrl, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'idnorm-license-key': licenseKey,
+        "Content-Type": "application/json",
+        "idnorm-license-key": licenseKey,
       },
       body: JSON.stringify(requestBody),
     });
@@ -48,7 +52,7 @@ export default async function handler(req, res) {
     const apiResponse = await response.json();
     return res.status(200).json({
       success: true,
-      message: '',
+      message: "",
       data: { response: apiResponse },
     });
   } catch (error) {

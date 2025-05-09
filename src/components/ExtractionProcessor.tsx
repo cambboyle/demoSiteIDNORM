@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  extractDocumentData,
   extractDocumentDataReal,
 } from "@/services/extractionService";
 import { toast } from "sonner";
@@ -70,6 +69,7 @@ const ExtractionProcessor: React.FC<ExtractionProcessorProps> = ({
 
       // Call the extraction service (real backend)
       const result = await extractDocumentDataReal(base64Image);
+      // Only log a message if the real backend is used
       console.info("Connected to backend and received extraction result.");
       if (
         !result.data.response ||
