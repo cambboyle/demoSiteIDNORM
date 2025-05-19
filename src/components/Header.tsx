@@ -92,7 +92,14 @@ const Header = () => {
         </nav>
 
         <div className="hidden md:flex">
-          <Button onClick={redirectToMainSite}>Visit Main Site</Button>
+          <Button
+            onClick={redirectToMainSite}
+            variant="default"
+            size="default"
+            className="font-medium"
+          >
+            Visit Main Site
+          </Button>
         </div>
 
         <Sheet open={open} onOpenChange={setOpen}>
@@ -152,6 +159,9 @@ const Header = () => {
                     redirectToMainSite();
                     setOpen(false);
                   }}
+                  variant="default"
+                  size="default"
+                  className="font-medium w-full"
                 >
                   Visit Main Site
                 </Button>

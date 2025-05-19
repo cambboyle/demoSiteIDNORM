@@ -30,7 +30,8 @@ const Support = () => {
             </p>
             <Button
               variant="outline"
-              className="mt-auto border-idnorm-primary text-idnorm-primary hover:bg-idnorm-primary hover:text-white"
+              size="default"
+              className="mt-auto"
               asChild
             >
               <a
@@ -54,7 +55,8 @@ const Support = () => {
             </p>
             <Button
               variant="outline"
-              className="mt-auto border-idnorm-primary text-idnorm-primary hover:bg-idnorm-primary hover:text-white"
+              size="default"
+              className="mt-auto"
               onClick={() => setIsContactFormOpen(true)}
             >
               Email Support

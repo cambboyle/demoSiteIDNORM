@@ -445,10 +445,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             >
               <Button
                 onClick={handleUploadClick}
-                className={`btn-primary flex items-center justify-center gap-2 ${
-                  isMobile
-                    ? "w-full py-4 text-lg rounded-xl shadow-md transition active:scale-95 whitespace-nowrap"
-                    : ""
+                className={`bg-[#333] text-white hover:bg-[#444] border-2 border-[#333] flex items-center justify-center gap-2 font-medium rounded-lg px-6 py-3 shadow-md transition active:scale-95 whitespace-nowrap text-sm ${
+                  isMobile ? "w-full" : ""
                 }`}
                 style={
                   isMobile
@@ -468,8 +466,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               </Button>
               <Button
                 onClick={handleTakePhotoClick}
-                className={`bg-white border-2 border-[#333] text-[#333] hover:bg-[#f3f3f3] flex items-center justify-center gap-2 font-medium rounded-xl shadow-md transition active:scale-95 whitespace-nowrap ${
-                  isMobile ? "w-full py-4" : ""
+                className={`bg-white border-2 border-[#333] text-[#333] hover:bg-[#f3f3f3] flex items-center justify-center gap-2 font-medium rounded-lg px-6 py-3 shadow-md transition active:scale-95 whitespace-nowrap text-sm ${
+                  isMobile ? "w-full" : ""
                 }`}
                 style={
                   isMobile
@@ -514,10 +512,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             >
               <Button
                 onClick={handleUploadClick}
-                className={`btn-primary ${
-                  isMobile
-                    ? "w-full py-4 text-lg rounded-xl flex justify-center items-center"
-                    : "flex justify-center items-center"
+                className={`bg-[#333] text-white hover:bg-[#444] border-2 border-[#333] flex items-center justify-center gap-2 font-medium rounded-lg px-6 py-3 shadow-md transition active:scale-95 whitespace-nowrap text-sm ${
+                  isMobile ? "w-full" : ""
                 }`}
                 style={isMobile ? { minHeight: 48 } : {}}
               >
@@ -525,10 +521,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               </Button>
               <Button
                 onClick={handleTakePhotoClick}
-                className={`btn-outline ${
-                  isMobile
-                    ? "w-full py-4 text-lg rounded-xl flex justify-center items-center"
-                    : "flex justify-center items-center"
+                className={`bg-white border-2 border-[#333] text-[#333] hover:bg-[#f3f3f3] flex items-center justify-center gap-2 font-medium rounded-lg px-6 py-3 shadow-md transition active:scale-95 whitespace-nowrap text-sm ${
+                  isMobile ? "w-full" : ""
                 }`}
                 style={isMobile ? { minHeight: 48 } : {}}
               >
@@ -539,8 +533,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                   resetPhoto();
                   onImageUploaded(null);
                 }}
-                className={`bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-3 rounded-lg shadow-md transition-all duration-200 flex items-center justify-center text-sm ${
-                  isMobile ? "w-32" : "w-40"
+                className={`bg-red-600 hover:bg-red-700 text-white border-2 border-red-700 font-medium rounded-lg px-6 py-3 shadow-md transition-all duration-200 flex items-center justify-center text-sm ${
+                  isMobile ? "w-full" : ""
                 }`}
                 style={isMobile ? { minHeight: 48 } : {}}
               >
@@ -577,7 +571,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               </div>
             </div>
             <Button
-              className="absolute top-2 right-2 text-2xl text-gray-500 hover:text-gray-700"
+              className="absolute top-2 right-2 text-2xl text-gray-500 hover:text-black !bg-transparent hover:!bg-transparent active:!bg-transparent shadow-none border-none focus:outline-none focus:ring-0"
               onClick={closeAllModals}
             >
               &times;
@@ -658,8 +652,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               >
                 <Button
                   onClick={capturePhoto}
-                  className={`bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-lg shadow-md transition-all duration-200 flex items-center justify-center text-sm ${
-                    isMobile ? "w-32" : "w-40"
+                  className={`bg-green-600 hover:bg-green-700 text-white border-2 border-green-700 font-medium rounded-lg px-6 py-3 shadow-md transition-all duration-200 flex items-center justify-center text-sm ${
+                    isMobile ? "w-full" : ""
                   }`}
                   title="Take Photo"
                   disabled={!!cameraError || !isVideoReady}
@@ -682,7 +676,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               </div>
             </div>
             <Button
-              className={`absolute top-2 right-2 z-20 text-2xl w-8 h-8 bg-white rounded-full text-gray-700 flex items-center justify-center ${
+              className={`absolute top-2 right-2 z-20 text-2xl w-8 h-8  !bg-transparent active:!bg-transparent rounded-full text-gray-700 flex items-center justify-center shadow-none border-none hover:text-black hover:!bg-transparent focus:outline-none focus:ring-0 ${
                 isMobile ? "" : ""
               }`}
               onClick={() => {
@@ -714,7 +708,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 <div className="flex flex-col gap-3">
                   <Button
                     onClick={confirmPhoto}
-                    className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-lg shadow-md transition-all duration-200 flex items-center justify-center text-sm"
+                    className="bg-green-600 hover:bg-green-700 text-white border-2 border-green-700 font-medium rounded-lg px-6 py-3 shadow-md transition-all duration-200 flex items-center justify-center text-sm"
                   >
                     Use this photo
                   </Button>
@@ -724,7 +718,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                       setShowConfirmation(false);
                       startCamera();
                     }}
-                    className="btn-outline"
+                    className="bg-white border-2 border-[#333] text-[#333] hover:bg-[#f3f3f3] font-medium rounded-lg px-6 py-3 shadow-md transition active:scale-95 whitespace-nowrap text-sm"
                   >
                     Retake photo
                   </Button>
@@ -732,7 +726,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               </div>
             </div>
             <Button
-              className="absolute top-2 right-2 text-2xl text-gray-500 hover:text-gray-700"
+              className="absolute top-2 right-2 text-2xl text-gray-500 hover:text-black !bg-transparent hover:!bg-transparent active:!bg-transparent shadow-none border-none focus:outline-none focus:ring-0"
               onClick={() => {
                 setCapturedImageData(null);
                 setShowConfirmation(false);
@@ -771,7 +765,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               </div>
             </div>
             <Button
-              className="absolute top-2 right-2 text-2xl text-gray-500 hover:text-gray-700"
+              className="absolute top-2 right-2 text-2xl text-gray-500 hover:text-black !bg-transparent hover:!bg-transparent active:!bg-transparent !shadow-none border-none focus:outline-none focus:ring-0"
               onClick={() => setShowQrCode(false)}
             >
               &times;

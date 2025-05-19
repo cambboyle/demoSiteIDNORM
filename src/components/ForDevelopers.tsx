@@ -7,7 +7,7 @@ const ForDevelopers = () => {
 
   return (
     <section
-      className="text-white rounded-2xl pt-16 pb-16 px-[10%]"
+      className="text-white rounded-lg pt-16 pb-16 px-[10%]"
       style={{
         background: "#333",
         boxSizing: "border-box",
@@ -30,7 +30,7 @@ const ForDevelopers = () => {
             <Button
               asChild
               variant="outline"
-              className="bg-white text-idnorm-primary hover:bg-gray-100 px-8 py-3 rounded-full font-semibold shadow text-sm"
+              className="bg-white text-idnorm-primary hover:bg-gray-100 px-8 py-3 rounded-lg font-semibold shadow text-sm"
             >
               <a
                 href="https://www.idnorm.com/api-documentation"
@@ -43,7 +43,7 @@ const ForDevelopers = () => {
             <Button
               asChild
               variant="outline"
-              className="bg-transparent border-white text-white hover:bg-white hover:text-idnorm-primary px-8 py-3 rounded-full font-semibold shadow text-sm"
+              className="bg-transparent border-white text-white hover:bg-white hover:text-idnorm-primary px-8 py-3 rounded-lg font-semibold shadow text-sm"
             >
               <a
                 href="https://github.com/idnorm/document-data-extraction/blob/master/sdk/README.md"

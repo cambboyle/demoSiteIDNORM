@@ -57,6 +57,7 @@ const Index = () => {
                 demoSectionRef.current?.scrollIntoView({ behavior: "smooth" })
               }
               size="lg"
+              variant="default"
               className="font-medium"
             >
               Try Demo
