@@ -42,7 +42,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   // Update imageSrc when selectedImage changes
   useEffect(() => {
-    if (selectedImage && selectedImage !== imageSrc) {
+    if (selectedImage === null && imageSrc !== null) {
+      setImageSrc(null);
+    } else if (selectedImage && selectedImage !== imageSrc) {
       setImageSrc(selectedImage);
     }
   }, [selectedImage, imageSrc]);

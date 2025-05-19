@@ -2,7 +2,10 @@
 // It manages the UI state for processing, error handling, and displaying results.
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { extractDocumentDataReal } from "@/services/extractionService";
+import {
+  extractDocumentDataReal,
+  extractDocumentData,
+} from "@/services/extractionService";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import IDResultsDisplay from "./IDResultsDisplay";
@@ -10,11 +13,15 @@ import IDResultsDisplay from "./IDResultsDisplay";
 interface ExtractionProcessorProps {
   selectedImage: string | null;
   onReset: () => void;
+  forceReset?: boolean;
+  onForceResetHandled?: () => void;
 }
 
 const ExtractionProcessor: React.FC<ExtractionProcessorProps> = ({
   selectedImage,
   onReset,
+  forceReset,
+  onForceResetHandled,
 }) => {
   // State for tracking processing status, errors, and extraction results
   const [isProcessing, setIsProcessing] = useState(false);
@@ -48,6 +55,16 @@ const ExtractionProcessor: React.FC<ExtractionProcessorProps> = ({
     useState<ExtractionResult | null>(null);
   const [showResults, setShowResults] = useState(false);
 
+  // Reset all state if forceReset is triggered
+  React.useEffect(() => {
+    if (forceReset) {
+      setExtractionResult(null);
+      setShowResults(false);
+      setError(null);
+      if (onForceResetHandled) onForceResetHandled();
+    }
+  }, [forceReset, onForceResetHandled]);
+
   // Handles the main extraction process for the selected image
   const processImage = async () => {
     if (!selectedImage) {
@@ -65,7 +82,7 @@ const ExtractionProcessor: React.FC<ExtractionProcessorProps> = ({
         ? selectedImage.split(",")[1]
         : selectedImage;
 
-      // Call the extraction service (real backend)
+      // Always use the real extraction API
       const result = await extractDocumentDataReal(base64Image);
       // TEMP: Log the full backend response for debugging visual fields
       console.info("Connected to backend and received extraction result.");
@@ -156,7 +173,10 @@ const ExtractionProcessor: React.FC<ExtractionProcessorProps> = ({
           />
 
           <div className="flex justify-center mt-6">
-            <Button variant="outline" onClick={handleReset} className="mr-2">
+            <Button
+              onClick={handleReset}
+              className="bg-[#333] text-white hover:bg-[#444] border-2 border-[#333] flex items-center justify-center gap-2 font-medium rounded-lg px-6 py-3 shadow-md transition active:scale-95 whitespace-nowrap text-sm mr-2"
+            >
               Process New ID
             </Button>
           </div>

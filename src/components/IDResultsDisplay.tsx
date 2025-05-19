@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { extractDocumentNumber } from "@/lib/extractDocumentNumber";
 
 interface ExtractedData {
   status: string;
@@ -175,6 +176,58 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
       newItem._id = String(dummy_id);
       fieldDict[newItem.type] = newItem;
       dummy_id += 1;
+    }
+  }
+
+  // Patch nationality if missing from text fields but present in MRZ or barcode
+  // (Now handled by extractDocumentNumber utility in UI, so this fallback is optional)
+  if (!fieldDict["TYPE_NATIONALITY"]) {
+    const mrzNationality = extractionData.data?.mrz?.fields?.nationality;
+    // Try all possible barcode keys for nationality
+    const barcode = extractionData.data?.pdf417Barcode || {};
+    const possibleBarcodeNationalityKeys = [
+      "nationality",
+      "countryIdentification",
+      "issuingCountry",
+      "countryCode",
+      "country",
+    ];
+    let barcodeNationality = null;
+    for (const key of possibleBarcodeNationalityKeys) {
+      if (barcode[key]) {
+        barcodeNationality = barcode[key];
+        break;
+      }
+    }
+    if (mrzNationality) {
+      fieldDict["TYPE_NATIONALITY"] = {
+        type: "TYPE_NATIONALITY",
+        value: mrzNationality,
+        _id: "TYPE-NATIONALITY-MRZ",
+      };
+    } else if (barcodeNationality) {
+      fieldDict["TYPE_NATIONALITY"] = {
+        type: "TYPE_NATIONALITY",
+        value: barcodeNationality,
+        _id: "TYPE-NATIONALITY-BARCODE",
+      };
+    }
+  }
+
+  // Patch ID number if missing from text fields but present in MRZ or barcode
+  // (Now handled by extractDocumentNumber utility in UI, so this fallback is optional)
+  if (
+    !fieldDict["TYPE_DOCUMENT_NUMBER"] &&
+    !fieldDict["TYPE_PERSONAL_IDENTITY_NUMBER"] &&
+    !fieldDict["TYPE_ID_NUMBER"]
+  ) {
+    const docNum = extractDocumentNumber(extractionData);
+    if (docNum) {
+      fieldDict["TYPE_DOCUMENT_NUMBER"] = {
+        type: "TYPE_DOCUMENT_NUMBER",
+        value: docNum,
+        _id: "TYPE-DOCUMENT-NUMBER-UTILITY",
+      };
     }
   }
 
@@ -355,18 +408,8 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                       ID Number
                     </h4>
                     <p className="text-lg font-medium">
-                      {/* Try text fields, then MRZ, then barcode, then fallback */}
-                      {(() => {
-                        const idText =
-                          fieldDict["TYPE_DOCUMENT_NUMBER"]?.value ||
-                          fieldDict["TYPE_PERSONAL_IDENTITY_NUMBER"]?.value ||
-                          fieldDict["TYPE_ID_NUMBER"]?.value;
-                        const mrzId =
-                          extractionData.data?.mrz?.fields?.documentNumber;
-                        const barcodeId =
-                          extractionData.data?.pdf417Barcode?.customerId;
-                        return idText || mrzId || barcodeId || "Not available";
-                      })()}
+                      {/* Use robust extraction utility for document number */}
+                      {extractDocumentNumber(extractionData) || "Not available"}
                     </p>
                   </div>
                   <div>

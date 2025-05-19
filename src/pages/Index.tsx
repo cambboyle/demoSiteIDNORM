@@ -14,12 +14,16 @@ import { FaLinkedin, FaYoutube } from "react-icons/fa";
 const Index = () => {
   // State for the currently selected/uploaded image
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [forceResetExtraction, setForceResetExtraction] = useState(false);
   const demoSectionRef = useRef<HTMLDivElement>(null);
 
   // Handles image upload from user
   const handleImageUploaded = useCallback((imageDataUrl: string) => {
     toast.success("Image successfully uploaded");
     setSelectedImage(imageDataUrl);
+    if (imageDataUrl === null) {
+      setForceResetExtraction(true);
+    }
   }, []);
 
   // Handles selection of an example image
@@ -35,6 +39,34 @@ const Index = () => {
   // Resets the demo to allow a new extraction
   const handleReset = () => {
     setSelectedImage(null);
+    setForceResetExtraction(true);
+    setTimeout(() => {
+      if (demoSectionRef.current) {
+        // Custom smooth scroll (slower than default)
+        const targetY =
+          demoSectionRef.current.getBoundingClientRect().top +
+          window.pageYOffset;
+        const startY = window.pageYOffset;
+        const distance = targetY - startY;
+        const duration = 900; // ms, adjust for speed (900ms is slower than default but not too slow)
+        let startTime: number | null = null;
+
+        function scrollStep(timestamp: number) {
+          if (!startTime) startTime = timestamp;
+          const elapsed = timestamp - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const ease =
+            progress < 0.5
+              ? 2 * progress * progress
+              : -1 + (4 - 2 * progress) * progress;
+          window.scrollTo(0, startY + distance * ease);
+          if (progress < 1) {
+            window.requestAnimationFrame(scrollStep);
+          }
+        }
+        window.requestAnimationFrame(scrollStep);
+      }
+    }, 100);
   };
 
   return (
@@ -109,6 +141,8 @@ const Index = () => {
             <ExtractionProcessor
               selectedImage={selectedImage}
               onReset={handleReset}
+              forceReset={forceResetExtraction}
+              onForceResetHandled={() => setForceResetExtraction(false)}
             />
           </div>
         </section>
