@@ -548,67 +548,119 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Show raw field name and value as extracted from backend */}
-                {extractionData.data?.textField?.map((item, idx) => (
-                  <ResultCard key={item.type + idx}>
-                    <div className="bg-muted px-4 py-2 border-b flex justify-between items-center">
-                      <h4 className="font-medium text-sm font-mono">
-                        {item.type.replace("TYPE_", "").toLowerCase()}
-                      </h4>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0"
-                        onClick={() => copyToClipboard(item.value)}
-                      >
-                        <ClipboardCopy size={14} />
-                      </Button>
-                    </div>
-                    <div className="p-4">
-                      <p className="font-medium font-mono">{item.value}</p>
-                    </div>
-                  </ResultCard>
-                ))}
-                {/* Show raw sex field if present */}
-                {extractionData.data?.sexField?.map((item, idx) => {
-                  // Prefer value, but if not present or not usable, check segments array for a value
-                  let rawSex = item.value;
-                  if (
-                    (!rawSex ||
-                      rawSex === "" ||
-                      rawSex === "UNKNOWN" ||
-                      rawSex === "UNSPECIFIED") &&
-                    Array.isArray(item.segments) &&
-                    item.segments.length > 0
-                  ) {
-                    // Find the first non-empty, non-unknown segment value
-                    const seg = item.segments.find(
-                      (seg) =>
-                        seg.value &&
-                        seg.value !== "UNKNOWN" &&
-                        seg.value !== "UNSPECIFIED"
-                    );
-                    if (seg) rawSex = seg.value;
-                  }
-                  return (
-                    <ResultCard key={"sex" + idx}>
-                      <div className="bg-muted px-4 py-2 border-b flex justify-between items-center">
-                        <h4 className="font-medium text-sm font-mono">sex</h4>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0"
-                          onClick={() => copyToClipboard(rawSex || "")}
-                        >
-                          <ClipboardCopy size={14} />
-                        </Button>
-                      </div>
-                      <div className="p-4">
-                        <p className="font-medium font-mono">{rawSex}</p>
-                      </div>
-                    </ResultCard>
+                {/* Define the desired order of fields */}
+                {(() => {
+                  const order = [
+                    {
+                      key: "id number",
+                      types: [
+                        "type_document_identity_number", // Correct API type
+                        "type_document_id_number",
+                        "type_document_number",
+                        "type_id_number",
+                        "type_personal_identity_number",
+                      ],
+                    },
+                    { key: "last_name", types: ["type_last_name"] },
+                    { key: "first_name", types: ["type_first_name"] },
+                    { key: "nationality", types: ["type_nationality"] },
+                    { key: "sex", types: ["sex"] },
+                    { key: "place of birth", types: ["type_place_of_birth"] },
+                    {
+                      key: "issuing authority",
+                      types: ["type_issuing_authority"],
+                    },
+                  ];
+                  // Collect all text fields and sex fields
+                  const textFields = extractionData.data?.textField || [];
+                  const sexFields = extractionData.data?.sexField || [];
+                  // Helper to get the raw value for sex
+                  const getRawSex = (item: {
+                    value: string;
+                    segments?: Array<{ value?: string }>;
+                  }) => {
+                    let rawSex = item.value;
+                    if (
+                      (!rawSex ||
+                        rawSex === "" ||
+                        rawSex === "UNKNOWN" ||
+                        rawSex === "UNSPECIFIED") &&
+                      Array.isArray(item.segments) &&
+                      item.segments.length > 0
+                    ) {
+                      const seg = item.segments.find(
+                        (seg) =>
+                          seg.value &&
+                          seg.value !== "UNKNOWN" &&
+                          seg.value !== "UNSPECIFIED"
+                      );
+                      if (seg) rawSex = seg.value;
+                    }
+                    return rawSex;
+                  };
+                  // Map for quick lookup by lowercased type
+                  const textFieldMap = Object.fromEntries(
+                    textFields.map((item) => [item.type.toLowerCase().replace('document_id_number', 'document_id_number'), item])
                   );
-                })}
+                  // Render fields in the specified order
+                  return order.map((field, idx) => {
+                    if (field.key === "sex" && sexFields.length > 0) {
+                      // Only show the first sex field
+                      const item = sexFields[0];
+                      const rawSex = getRawSex(item);
+                      return (
+                        <ResultCard key={field.key + idx}>
+                          <div className="bg-muted px-4 py-2 border-b flex justify-between items-center">
+                            <h4 className="font-medium text-sm font-mono">
+                              sex
+                            </h4>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0"
+                              onClick={() => copyToClipboard(rawSex || "")}
+                            >
+                              <ClipboardCopy size={14} />
+                            </Button>
+                          </div>
+                          <div className="p-4">
+                            <p className="font-medium font-mono">{rawSex}</p>
+                          </div>
+                        </ResultCard>
+                      );
+                    } else {
+                      // Find the first matching type for this field
+                      const type = field.types.find((t) => t in textFieldMap);
+                      if (type) {
+                        const item = textFieldMap[type];
+                        return (
+                          <ResultCard key={field.key + idx}>
+                            <div className="bg-muted px-4 py-2 border-b flex justify-between items-center">
+                              <h4 className="font-medium text-sm font-mono">
+                                {field.key}
+                              </h4>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 w-7 p-0"
+                                onClick={() => copyToClipboard(item.value)}
+                              >
+                                <ClipboardCopy size={14} />
+                              </Button>
+                            </div>
+                            <div className="p-4">
+                              <p className="font-medium font-mono">
+                                {item.value}
+                              </p>
+                            </div>
+                          </ResultCard>
+                        );
+                      }
+                    }
+                    return null;
+                  });
+                })()}
+                {/* Fallback for no fields */}
                 {(!extractionData.data?.textField ||
                   extractionData.data.textField.length === 0) &&
                   (!extractionData.data?.sexField ||
