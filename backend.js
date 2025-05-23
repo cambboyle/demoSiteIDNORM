@@ -49,9 +49,15 @@ app.post("/api/extract", async (req, res) => {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(
+        `[${errorId}] Error response from idexServerUrl:`,
+        errorText
+      );
       return res.status(500).json({
         success: false,
         message: `[${errorId}] Failed to get valid response for data processing!`,
+        error: errorText,
       });
     }
 
@@ -62,9 +68,11 @@ app.post("/api/extract", async (req, res) => {
       data: { response: apiResponse },
     });
   } catch (error) {
+    console.error(`[${errorId}] Exception in /api/extract:`, error);
     return res.status(500).json({
       success: false,
       message: `[${errorId}] Error while processing provided image!`,
+      error: error.message || error,
     });
   }
 });

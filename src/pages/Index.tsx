@@ -18,7 +18,9 @@ const Index = () => {
   const [forceResetExtraction, setForceResetExtraction] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingImage, setPendingImage] = useState<string | null>(null);
-  const [pendingSource, setPendingSource] = useState<"upload" | "example" | null>(null);
+  const [pendingSource, setPendingSource] = useState<
+    "upload" | "example" | null
+  >(null);
   const demoSectionRef = useRef<HTMLDivElement>(null);
 
   // Handles image upload from user
@@ -118,11 +120,20 @@ const Index = () => {
       {showConfirmModal && (
         <div className="popup-overlay">
           <div className="popup-container">
-            <h3 className="text-xl font-semibold mb-4">Replace current image?</h3>
-            <p className="mb-6">You already have an image selected. Are you sure you want to choose a new image? This will remove your current selection.</p>
+            <h3 className="text-xl font-semibold mb-4">
+              Replace current image?
+            </h3>
+            <p className="mb-6">
+              You already have an image selected. Are you sure you want to
+              choose a new image? This will remove your current selection.
+            </p>
             <div className="flex justify-center gap-4">
-              <Button onClick={confirmImageChange} className="btn-primary">Yes, replace</Button>
-              <Button onClick={cancelImageChange} variant="outline">Cancel</Button>
+              <Button onClick={confirmImageChange} className="btn-primary">
+                Yes, replace
+              </Button>
+              <Button onClick={cancelImageChange} variant="outline">
+                Cancel
+              </Button>
             </div>
           </div>
         </div>
@@ -154,7 +165,9 @@ const Index = () => {
         </section>
 
         {/* Example Documents Section */}
-        <ExampleDocuments onSelectExample={(img) => requestImageChange(img, "example")}/>
+        <ExampleDocuments
+          onSelectExample={(img) => requestImageChange(img, "example")}
+        />
 
         {/* Demo Section */}
         <section
