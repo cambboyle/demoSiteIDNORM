@@ -600,7 +600,12 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                   };
                   // Map for quick lookup by lowercased type
                   const textFieldMap = Object.fromEntries(
-                    textFields.map((item) => [item.type.toLowerCase().replace('document_id_number', 'document_id_number'), item])
+                    textFields.map((item) => [
+                      item.type
+                        .toLowerCase()
+                        .replace("document_id_number", "document_id_number"),
+                      item,
+                    ])
                   );
                   // Render fields in the specified order
                   return order.map((field, idx) => {
