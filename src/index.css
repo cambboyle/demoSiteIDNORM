@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Wix+Madefor+Display:wght@400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -87,7 +87,7 @@
   html,
   body,
   * {
-    font-family: "Inter", sans-serif !important;
+    font-family: "Wix Madefor Display", "Helvetica Neue", Arial, sans-serif !important;
   }
 }
 

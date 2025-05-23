@@ -144,7 +144,7 @@ const Index = () => {
         {/* Hero Section introduces the app */}
         <section className="bg-gradient-to-b from-idnorm-neutral to-white py-16">
           <div className="container mx-auto px-4 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-idnorm-primary mb-4">
+            <h1 className="text-3xl md:text-5xl font-light text-idnorm-primary mb-4">
               ID Data Extraction Made Simple
             </h1>
             <p className="text-idnorm-lightText max-w-2xl mx-auto mb-8 text-lg">
