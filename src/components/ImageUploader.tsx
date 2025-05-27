@@ -573,7 +573,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               </div>
             </div>
             <Button
-              className="absolute top-2 right-2 text-2xl text-gray-500 hover:text-black !bg-transparent hover:!bg-transparent active:!bg-transparent shadow-none border-none focus:outline-none focus:ring-0"
+              className="absolute right-2 text-2xl text-gray-500 hover:text-black !bg-transparent hover:!bg-transparent active:!bg-transparent shadow-none border-none focus:outline-none focus:ring-0"
               onClick={closeAllModals}
             >
               &times;
@@ -648,14 +648,16 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 ></video>
               )}
               <div
-                className={`p-4 bg-white flex justify-center gap-4 ${
+                className={`p-8 bg-white flex justify-center gap-4 ${
                   isMobile ? "fixed bottom-0 left-0 w-full z-20" : ""
                 }`}
               >
                 <Button
                   onClick={capturePhoto}
-                  className={`bg-green-600 hover:bg-green-700 text-white border-2 border-green-700 font-medium rounded-lg px-6 py-3 shadow-md transition-all duration-200 flex items-center justify-center text-sm ${
-                    isMobile ? "w-full" : ""
+                  className={`font-medium rounded-lg shadow-md transition-all duration-200 flex items-center justify-center border-2 text-sm ${
+                    isMobile
+                      ? "w-full px-6 py-3 min-h-[48px] bg-green-600 hover:bg-green-700 text-white border-green-700"
+                      : "px-6 py-3 bg-green-600 hover:bg-green-700 text-white border-green-700"
                   }`}
                   title="Take Photo"
                   disabled={!!cameraError || !isVideoReady}
@@ -668,10 +670,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                     setShowCamera(false);
                     setShowPhotoOptions(true);
                   }}
-                  className={`btn-outline self-center ${
-                    isMobile ? "text-lg py-4 px-6" : ""
+                  className={`font-medium rounded-lg shadow-md transition-all duration-200 flex items-center justify-center border-2 text-sm ${
+                    isMobile
+                      ? "w-full px-6 py-3 min-h-[48px] bg-white text-[#333] border-[#333] hover:bg-[#f3f3f3]"
+                      : "btn-outline self-center px-6 py-3"
                   }`}
-                  style={isMobile ? { minHeight: 48 } : {}}
+                  style={!isMobile ? {} : {}}
                 >
                   Back
                 </Button>
