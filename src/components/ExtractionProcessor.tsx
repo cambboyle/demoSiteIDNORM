@@ -9,6 +9,59 @@ import {
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import IDResultsDisplay from "./IDResultsDisplay";
+import type { ExtractionResult as ServiceExtractionResult } from "@/services/extractionService";
+
+// Define ExtractedData type locally (copied from IDResultsDisplay)
+interface ExtractedData {
+  status: string;
+  documentImage?: string;
+  classification?: {
+    documentClass?: string;
+    documentType?: string;
+    countryCode?: string;
+  };
+  data?: {
+    textField?: Array<{
+      type: string;
+      value: string;
+      _id?: string;
+    }>;
+    dateField?: Array<{
+      type: string;
+      value: string;
+      date?: {
+        day: number;
+        month: number;
+        year: number;
+      };
+      _id?: string;
+    }>;
+    sexField?: Array<{
+      value: string;
+      sex: string;
+      _id?: string;
+      segments?: Array<{ value?: string }>;
+    }>;
+    visualField?: Array<{
+      type: string;
+      image: string;
+    }>;
+    mrz?: {
+      status: string;
+      fields: Record<string, string>;
+    };
+    pdf417Barcode?: Record<string, string>;
+  };
+  detection?: {
+    status: string;
+  };
+}
+
+// Extend ExtractedData to include request/response for debug tabs
+interface ExtractedDataWithDebug extends ExtractedData {
+  request?: Record<string, unknown>;
+  response?: Record<string, unknown>;
+}
 
 interface ExtractionProcessorProps {
   selectedImage: string | null;
@@ -17,6 +70,7 @@ interface ExtractionProcessorProps {
   onForceResetHandled?: () => void;
 }
 
+// ExtractionProcessor component
 const ExtractionProcessor: React.FC<ExtractionProcessorProps> = ({
   selectedImage,
   onReset,
@@ -26,33 +80,8 @@ const ExtractionProcessor: React.FC<ExtractionProcessorProps> = ({
   // State for tracking processing status, errors, and extraction results
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  interface ExtractionResult {
-    status: string;
-    documentImage?: string;
-    classification?: Record<string, string>;
-    data?: {
-      textField?: { type: string; value: string; _id?: string }[];
-      dateField?: {
-        type: string;
-        value: string;
-        date?: { day: number; month: number; year: number };
-        _id?: string;
-      }[];
-      sexField?: { value: string; sex: string; _id?: string }[];
-      visualField?: { type: string; image: string }[];
-      mrz?: {
-        status: string;
-        fields: Record<string, string>;
-      };
-      pdf417Barcode?: Record<string, string>;
-    };
-    detection?: {
-      status: string;
-    };
-  }
-
   const [extractionResult, setExtractionResult] =
-    useState<ExtractionResult | null>(null);
+    useState<ExtractedDataWithDebug | null>(null);
   const [showResults, setShowResults] = useState(false);
 
   // Reset all state if forceReset is triggered
@@ -82,46 +111,27 @@ const ExtractionProcessor: React.FC<ExtractionProcessorProps> = ({
         ? selectedImage.split(",")[1]
         : selectedImage;
 
+      // Build the request body to match your provided JSON exactly
+      const requestBody = {
+        config: {
+          returnDocumentImage: {},
+          returnVisualFields: {
+            typeFilter: [
+              "VISUAL_FIELD_TYPE_FACE_PHOTO",
+              "VISUAL_FIELD_TYPE_SIGNATURE",
+            ],
+          },
+        },
+        imageJpeg: base64Image,
+      };
+
       // Always use the real extraction API
       const result = await extractDocumentDataReal(base64Image);
-      // TEMP: Log the full backend response for debugging visual fields
-      console.info("Connected to backend and received extraction result.");
-      console.log("Full backend response:", result.data.response);
-      if (
-        !result.data.response ||
-        result.data.response.status !== "STATUS_OK" ||
-        !result.data.response.detection
-      ) {
-        setError(
-          "Failed to detect a document in the image. Please ensure the document is clearly visible."
-        );
-        setIsProcessing(false);
-        return;
-      }
-
       // Save the extraction result and show results UI
       setExtractionResult({
         ...result.data.response,
-        data: {
-          ...result.data.response.data,
-          sexField: Array.isArray(result.data.response.data?.sexField)
-            ? result.data.response.data.sexField.map((field) => ({
-                value: field.value,
-                sex: field.sex,
-              }))
-            : result.data.response.data?.sexField
-            ? [result.data.response.data.sexField]
-            : [],
-          visualField: Array.isArray(result.data.response.data?.visualField)
-            ? result.data.response.data.visualField.map((field) => ({
-                type: field.type,
-                image: field.image,
-              }))
-            : result.data.response.data?.visualField
-            ? [result.data.response.data.visualField]
-            : [],
-          pdf417Barcode: result.data.response.data?.pdf417Barcode || {},
-        },
+        request: requestBody, // Show the exact request JSON
+        response: result.data.response, // Show the full backend response
       });
       setShowResults(true);
     } catch (err) {
