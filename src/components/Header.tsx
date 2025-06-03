@@ -12,27 +12,6 @@ import {
 const Header = () => {
   const [open, setOpen] = useState(false);
 
-  const scrollToSection = (sectionId: string) => {
-    const section = document.getElementById(sectionId);
-    if (section) {
-      // Get navbar height (sticky header)
-      const navbar = document.querySelector("header");
-      const navbarHeight = navbar ? navbar.getBoundingClientRect().height : 0;
-      const sectionTop = section.getBoundingClientRect().top + window.scrollY;
-      // No offset for support section (if at bottom)
-      const offset = sectionId === "support" ? 0 : navbarHeight + 8;
-      window.scrollTo({
-        top: sectionTop - offset,
-        behavior: "smooth",
-      });
-      setOpen(false);
-    }
-  };
-
-  const redirectToMainSite = () => {
-    window.open("https://www.idnorm.com/", "_blank");
-  };
-
   return (
     <header className="bg-white shadow-sm py-4 sticky top-0 z-50">
       <div className="container mx-auto px-4 flex items-center justify-between">
@@ -54,53 +33,61 @@ const Header = () => {
           <ul className="flex space-x-8">
             <li>
               <a
-                href="#"
+                href="https://www.idnorm.com/#comp-m0ij8l2k"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-idnorm-text hover:text-idnorm-primary transition-colors font-medium"
+              >
+                Products
+              </a>
+            </li>
+            <li>
+              <a
+                href="https://www.idnorm.com/#comp-lk9fbi9j"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-idnorm-text hover:text-idnorm-primary transition-colors font-medium"
+              >
+                Blog
+              </a>
+            </li>
+            <li>
+              <a
+                href="#for-developers"
                 onClick={(e) => {
                   e.preventDefault();
-                  scrollToSection("demo-section");
+                  const el = document.getElementById("for-developers");
+                  if (el) {
+                    const y =
+                      el.getBoundingClientRect().top + window.pageYOffset - 80; // 80px offset for navbar
+                    window.scrollTo({ top: y, behavior: "smooth" });
+                  }
                 }}
-                className="text-idnorm-text hover:text-idnorm-primary transition-colors"
+                className="text-idnorm-text hover:text-idnorm-primary transition-colors font-medium"
+              >
+                Dev
+              </a>
+            </li>
+            <li>
+              <a
+                href="https://www.idnorm.com/plans"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-idnorm-text hover:text-idnorm-primary transition-colors font-medium"
+              >
+                Pricing
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                className="text-idnorm-text hover:text-idnorm-primary transition-colors font-medium"
               >
                 Demo
               </a>
             </li>
-            <li>
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  scrollToSection("for-developers");
-                }}
-                className="text-idnorm-text hover:text-idnorm-primary transition-colors"
-              >
-                For Devs
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  scrollToSection("support");
-                }}
-                className="text-idnorm-text hover:text-idnorm-primary transition-colors"
-              >
-                Support
-              </a>
-            </li>
           </ul>
         </nav>
-
-        <div className="hidden md:flex">
-          <Button
-            onClick={redirectToMainSite}
-            variant="default"
-            size="default"
-            className="font-medium"
-          >
-            Visit Main Site
-          </Button>
-        </div>
 
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
@@ -121,51 +108,50 @@ const Header = () => {
             </SheetHeader>
             <nav className="flex flex-col mt-8">
               <a
-                href="#"
-                className="py-3 border-b border-gray-100 text-idnorm-text hover:text-idnorm-primary transition-colors"
+                href="https://www.idnorm.com/#comp-m0ij8l2k"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-3 border-b border-gray-100 text-idnorm-text hover:text-idnorm-primary transition-colors font-medium"
+              >
+                Products
+              </a>
+              <a
+                href="https://www.idnorm.com/#comp-lk9fbi9j"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-3 border-b border-gray-100 text-idnorm-text hover:text-idnorm-primary transition-colors font-medium"
+              >
+                Blog
+              </a>
+              <a
+                href="#for-developers"
                 onClick={(e) => {
                   e.preventDefault();
-                  scrollToSection("demo-section");
-                  setOpen(false);
+                  const el = document.getElementById("for-developers");
+                  if (el) {
+                    const y =
+                      el.getBoundingClientRect().top + window.pageYOffset - 80;
+                    window.scrollTo({ top: y, behavior: "smooth" });
+                  }
                 }}
+                className="py-3 border-b border-gray-100 text-idnorm-text hover:text-idnorm-primary transition-colors font-medium"
+              >
+                Dev
+              </a>
+              <a
+                href="https://www.idnorm.com/plans"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-3 border-b border-gray-100 text-idnorm-text hover:text-idnorm-primary transition-colors font-medium"
+              >
+                Pricing
+              </a>
+              <a
+                href="#"
+                className="py-3 border-b border-gray-100 text-idnorm-text hover:text-idnorm-primary transition-colors font-medium"
               >
                 Demo
               </a>
-              <a
-                href="#"
-                className="py-3 border-b border-gray-100 text-idnorm-text hover:text-idnorm-primary transition-colors"
-                onClick={(e) => {
-                  e.preventDefault();
-                  scrollToSection("for-developers");
-                  setOpen(false);
-                }}
-              >
-                For Devs
-              </a>
-              <a
-                href="#"
-                className="py-3 border-b border-gray-100 text-idnorm-text hover:text-idnorm-primary transition-colors"
-                onClick={(e) => {
-                  e.preventDefault();
-                  scrollToSection("support");
-                  setOpen(false);
-                }}
-              >
-                Support
-              </a>
-              <div className="mt-6">
-                <Button
-                  onClick={() => {
-                    redirectToMainSite();
-                    setOpen(false);
-                  }}
-                  variant="default"
-                  size="default"
-                  className="font-medium w-full"
-                >
-                  Visit Main Site
-                </Button>
-              </div>
             </nav>
           </SheetContent>
         </Sheet>

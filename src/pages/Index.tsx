@@ -17,11 +17,6 @@ const Index = () => {
   // State for the currently selected/uploaded image
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [forceResetExtraction, setForceResetExtraction] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [pendingImage, setPendingImage] = useState<string | null>(null);
-  const [pendingSource, setPendingSource] = useState<
-    "upload" | "example" | null
-  >(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [extractionResult, setExtractionResult] =
     useState<ExtractedDataWithDebug | null>(null);
@@ -83,41 +78,15 @@ const Index = () => {
   // Centralized handler for image selection (upload or example)
   const requestImageChange = useCallback(
     (imageDataUrl: string, source: "upload" | "example") => {
-      if (selectedImage) {
-        setPendingImage(imageDataUrl);
-        setPendingSource(source);
-        setShowConfirmModal(true);
+      // Always replace the image directly, no confirmation
+      if (source === "upload") {
+        handleImageUploaded(imageDataUrl);
       } else {
-        if (source === "upload") {
-          handleImageUploaded(imageDataUrl);
-        } else {
-          handleExampleImageSelected(imageDataUrl);
-        }
+        handleExampleImageSelected(imageDataUrl);
       }
     },
-    [selectedImage, handleImageUploaded, handleExampleImageSelected]
+    [handleImageUploaded, handleExampleImageSelected]
   );
-
-  // Confirm overwrite
-  const confirmImageChange = () => {
-    if (pendingImage && pendingSource) {
-      if (pendingSource === "upload") {
-        handleImageUploaded(pendingImage);
-      } else {
-        handleExampleImageSelected(pendingImage);
-      }
-    }
-    setShowConfirmModal(false);
-    setPendingImage(null);
-    setPendingSource(null);
-  };
-
-  // Cancel overwrite
-  const cancelImageChange = () => {
-    setShowConfirmModal(false);
-    setPendingImage(null);
-    setPendingSource(null);
-  };
 
   const handleExtractIdData = async () => {
     if (!selectedImage) {
@@ -161,28 +130,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      {/* Confirmation Modal */}
-      {showConfirmModal && (
-        <div className="popup-overlay">
-          <div className="popup-container">
-            <h3 className="text-xl font-semibold mb-4">
-              Replace current image?
-            </h3>
-            <p className="mb-6">
-              You already have an image selected. Are you sure you want to
-              choose a new image? This will remove your current selection.
-            </p>
-            <div className="flex justify-center gap-4">
-              <Button onClick={confirmImageChange} className="btn-primary">
-                Yes, replace
-              </Button>
-              <Button onClick={cancelImageChange} variant="outline">
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
       {/* Renders the main header and hero section */}
       <Header />
       <main className="flex-1">
