@@ -7,11 +7,15 @@ import { Button } from "@/components/ui/button";
 interface ImageUploaderProps {
   onImageUploaded: (imageDataUrl: string) => void;
   selectedImage?: string | null;
+  onExtractIdData?: () => void;
+  isProcessing?: boolean; // New prop for loading state
 }
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({
   onImageUploaded,
   selectedImage,
+  onExtractIdData,
+  isProcessing = false, // default to false
 }) => {
   // Constants
   const MAX_FILE_SIZE = 512 * 1024; // 512KB
@@ -435,116 +439,142 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           onChange={handleFileChange}
         />
 
-        {!imageSrc ? (
-          // Initial upload state
-          <div className="flex flex-col items-center justify-center h-full">
-            <p className="font-bold mb-2">Drag and drop document image</p>
-            <p className="mb-4">or</p>
-            <div
-              className={`flex flex-col ${
-                isMobile ? "gap-3 w-full" : "sm:flex-row gap-4"
-              }`}
-            >
-              <Button
-                onClick={handleUploadClick}
-                className={`bg-[#333] text-white hover:bg-[#444] border-2 border-[#333] flex items-center justify-center gap-2 font-medium rounded-lg px-6 py-3 shadow-md transition active:scale-95 whitespace-nowrap text-sm ${
-                  isMobile ? "w-full" : ""
+        {/* Only show upload/camera/image controls if not processing */}
+        {!isProcessing &&
+          (!imageSrc ? (
+            // Initial upload state
+            <div className="flex flex-col items-center justify-center h-full">
+              <p className="font-bold mb-2">Drag and drop document image</p>
+              <p className="mb-4">or</p>
+              <div
+                className={`flex flex-col ${
+                  isMobile ? "gap-3 w-full" : "sm:flex-row gap-4"
                 }`}
-                style={
-                  isMobile
-                    ? {
-                        minHeight: 48,
-                        justifyContent: "center",
-                        alignItems: "center",
-                        textAlign: "center",
-                      }
-                    : {}
-                }
               >
-                <span className="flex items-center justify-center w-full">
-                  <Upload size={20} />
-                  <span className="flex-1 text-center">Upload image</span>
-                </span>
-              </Button>
-              <Button
-                onClick={handleTakePhotoClick}
-                className={`bg-white border-2 border-[#333] text-[#333] hover:bg-[#f3f3f3] flex items-center justify-center gap-2 font-medium rounded-lg px-6 py-3 shadow-md transition active:scale-95 whitespace-nowrap text-sm ${
-                  isMobile ? "w-full" : ""
-                }`}
-                style={
-                  isMobile
-                    ? {
-                        minHeight: 48,
-                        justifyContent: "center",
-                        alignItems: "center",
-                        textAlign: "center",
-                      }
-                    : {}
-                }
-              >
-                <span className="flex items-center justify-center w-full">
-                  <Camera size={20} />
-                  <span className="flex-1 text-center">Take Photo</span>
-                </span>
-              </Button>
+                <Button
+                  onClick={handleUploadClick}
+                  className={`bg-[#333] text-white hover:bg-[#444] border-2 border-[#333] flex items-center justify-center gap-2 font-medium rounded-lg px-6 py-3 shadow-md transition active:scale-95 whitespace-nowrap text-sm ${
+                    isMobile ? "w-full" : ""
+                  }`}
+                  style={
+                    isMobile
+                      ? {
+                          minHeight: 48,
+                          justifyContent: "center",
+                          alignItems: "center",
+                          textAlign: "center",
+                        }
+                      : {}
+                  }
+                >
+                  <span className="flex items-center justify-center w-full">
+                    <Upload size={20} />
+                    <span className="flex-1 text-center">Upload image</span>
+                  </span>
+                </Button>
+                <Button
+                  onClick={handleTakePhotoClick}
+                  className={`bg-white border-2 border-[#333] text-[#333] hover:bg-[#f3f3f3] flex items-center justify-center gap-2 font-medium rounded-lg px-6 py-3 shadow-md transition active:scale-95 whitespace-nowrap text-sm ${
+                    isMobile ? "w-full" : ""
+                  }`}
+                  style={
+                    isMobile
+                      ? {
+                          minHeight: 48,
+                          justifyContent: "center",
+                          alignItems: "center",
+                          textAlign: "center",
+                        }
+                      : {}
+                  }
+                >
+                  <span className="flex items-center justify-center w-full">
+                    <Camera size={20} />
+                    <span className="flex-1 text-center">Take Photo</span>
+                  </span>
+                </Button>
+              </div>
             </div>
-          </div>
-        ) : (
-          // Image captured state
-          <div className="flex flex-col h-full w-full">
-            <div className="image-preview-container flex flex-col flex-1 w-full justify-center items-center">
-              <img
-                src={imageSrc}
-                alt="Your captured photo"
-                className="max-w-[600px] max-h-[340px] object-contain rounded-xl shadow-lg border border-gray-200 bg-white"
-                style={
+          ) : (
+            // Image captured state
+            <div className="flex flex-col h-full w-full">
+              <div className="image-preview-container flex flex-col flex-1 w-full justify-center items-center">
+                <img
+                  src={imageSrc}
+                  alt="Your captured photo"
+                  className="max-w-[600px] max-h-[340px] object-contain rounded-xl shadow-lg border border-gray-200 bg-white"
+                  style={
+                    isMobile
+                      ? { flex: 1, width: "100%", height: "auto", minHeight: 0 }
+                      : { background: "#fff" }
+                  }
+                />
+              </div>
+              <div
+                className={`main-image-controls mt-4 flex ${
                   isMobile
-                    ? { flex: 1, width: "100%", height: "auto", minHeight: 0 }
-                    : { background: "#fff" }
-                }
-              />
+                    ? "flex-col gap-3 w-full items-stretch min-h-[180px] justify-end"
+                    : "gap-2 items-center"
+                }`}
+                style={isMobile ? { flex: 0, minHeight: 180 } : {}}
+              >
+                <Button
+                  onClick={handleUploadClick}
+                  className={`bg-[#333] text-white hover:bg-[#444] border-2 border-[#333] flex items-center justify-center gap-2 font-medium rounded-lg px-6 py-3 shadow-md transition active:scale-95 whitespace-nowrap text-sm ${
+                    isMobile ? "w-full" : ""
+                  }`}
+                  style={isMobile ? { minHeight: 48 } : {}}
+                >
+                  Upload New Image
+                </Button>
+                <Button
+                  onClick={handleTakePhotoClick}
+                  className={`bg-white border-2 border-[#333] text-[#333] hover:bg-[#f3f3f3] flex items-center justify-center gap-2 font-medium rounded-lg px-6 py-3 shadow-md transition active:scale-95 whitespace-nowrap text-sm ${
+                    isMobile ? "w-full" : ""
+                  }`}
+                  style={isMobile ? { minHeight: 48 } : {}}
+                >
+                  Retake Photo
+                </Button>
+                <Button
+                  onClick={onExtractIdData}
+                  className={`bg-green-600 hover:bg-green-700 text-white border-2 border-green-700 font-medium rounded-lg px-6 py-3 shadow-md transition-all duration-200 flex items-center justify-center text-sm ${
+                    isMobile ? "w-full" : ""
+                  }`}
+                  style={isMobile ? { minHeight: 48 } : {}}
+                  disabled={!onExtractIdData || isProcessing}
+                >
+                  {isProcessing ? (
+                    <span className="flex items-center justify-center">
+                      <svg
+                        className="animate-spin mr-2 h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                        ></path>
+                      </svg>
+                      Processing...
+                    </span>
+                  ) : (
+                    "Extract ID Data"
+                  )}
+                </Button>
+              </div>
             </div>
-            <div
-              className={`main-image-controls mt-4 flex ${
-                isMobile
-                  ? "flex-col gap-3 w-full items-stretch min-h-[180px] justify-end"
-                  : "gap-2 items-center"
-              }`}
-              style={isMobile ? { flex: 0, minHeight: 180 } : {}}
-            >
-              <Button
-                onClick={handleUploadClick}
-                className={`bg-[#333] text-white hover:bg-[#444] border-2 border-[#333] flex items-center justify-center gap-2 font-medium rounded-lg px-6 py-3 shadow-md transition active:scale-95 whitespace-nowrap text-sm ${
-                  isMobile ? "w-full" : ""
-                }`}
-                style={isMobile ? { minHeight: 48 } : {}}
-              >
-                Upload New Image
-              </Button>
-              <Button
-                onClick={handleTakePhotoClick}
-                className={`bg-white border-2 border-[#333] text-[#333] hover:bg-[#f3f3f3] flex items-center justify-center gap-2 font-medium rounded-lg px-6 py-3 shadow-md transition active:scale-95 whitespace-nowrap text-sm ${
-                  isMobile ? "w-full" : ""
-                }`}
-                style={isMobile ? { minHeight: 48 } : {}}
-              >
-                Retake Photo
-              </Button>
-              <Button
-                onClick={() => {
-                  resetPhoto();
-                  onImageUploaded(null);
-                }}
-                className={`bg-red-600 hover:bg-red-700 text-white border-2 border-red-700 font-medium rounded-lg px-6 py-3 shadow-md transition-all duration-200 flex items-center justify-center text-sm ${
-                  isMobile ? "w-full" : ""
-                }`}
-                style={isMobile ? { minHeight: 48 } : {}}
-              >
-                Remove Image
-              </Button>
-            </div>
-          </div>
-        )}
+          ))}
       </div>
 
       {/* Photo Options Modal */}
@@ -568,12 +598,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                   }}
                   className="btn-outline"
                 >
-                  Get QR code
+                  Try on Mobile
                 </Button>
               </div>
             </div>
             <Button
-              className="absolute right-2 text-2xl text-gray-500 hover:text-black !bg-transparent hover:!bg-transparent active:!bg-transparent shadow-none border-none focus:outline-none focus:ring-0"
+              className="absolute top-2 right-2 text-2xl text-gray-500 hover:text-black !bg-transparent hover:!bg-transparent active:!bg-transparent shadow-none border-none focus:outline-none focus:ring-0"
               onClick={closeAllModals}
             >
               &times;
@@ -748,7 +778,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       {showQrCode && (
         <div className="popup-overlay">
           <div className="popup-container">
-            <h3 className="text-xl font-semibold mb-4">Scan QR Code</h3>
+            <h3 className="text-xl font-semibold mb-4">Try on Mobile</h3>
             <div className="flex flex-col md:flex-row items-center justify-center gap-6">
               <div className="w-48 h-48 bg-gray-100 flex items-center justify-center border">
                 <img

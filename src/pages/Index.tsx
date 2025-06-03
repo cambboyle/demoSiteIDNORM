@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import ExampleDocuments from "@/components/ExampleDocuments";
 import Support from "@/components/Support";
 import ExtractionProcessor from "@/components/ExtractionProcessor";
+import type { ExtractedDataWithDebug } from "@/components/ExtractionProcessor";
 import ForDevelopers from "@/components/ForDevelopers";
 import { FaLinkedin, FaYoutube } from "react-icons/fa";
 import React from "react";
@@ -21,6 +22,10 @@ const Index = () => {
   const [pendingSource, setPendingSource] = useState<
     "upload" | "example" | null
   >(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [extractionResult, setExtractionResult] =
+    useState<ExtractedDataWithDebug | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const demoSectionRef = useRef<HTMLDivElement>(null);
 
   // Handles image upload from user
@@ -114,6 +119,46 @@ const Index = () => {
     setPendingSource(null);
   };
 
+  const handleExtractIdData = async () => {
+    if (!selectedImage) {
+      toast.error("Please select an image first");
+      return;
+    }
+    setIsProcessing(true);
+    setError(null);
+    setExtractionResult(null);
+    try {
+      const base64Image = selectedImage.includes("data:image")
+        ? selectedImage.split(",")[1]
+        : selectedImage;
+      const requestBody = {
+        config: {
+          returnDocumentImage: {},
+          returnVisualFields: {
+            typeFilter: [
+              "VISUAL_FIELD_TYPE_FACE_PHOTO",
+              "VISUAL_FIELD_TYPE_SIGNATURE",
+            ],
+          },
+        },
+        imageJpeg: base64Image,
+      };
+      const { extractDocumentDataReal } = await import(
+        "@/services/extractionService"
+      );
+      const result = await extractDocumentDataReal(base64Image);
+      setExtractionResult({
+        ...result.data.response,
+        request: requestBody,
+        response: result.data.response,
+      });
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again later.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {/* Confirmation Modal */}
@@ -197,6 +242,7 @@ const Index = () => {
               <ImageUploader
                 onImageUploaded={(img) => requestImageChange(img, "upload")}
                 selectedImage={selectedImage}
+                onExtractIdData={handleExtractIdData}
               />
 
               <div className="mt-8 text-sm text-idnorm-lightText max-w-md text-center">
@@ -207,12 +253,18 @@ const Index = () => {
               </div>
             </div>
 
-            <ExtractionProcessor
-              selectedImage={selectedImage}
-              onReset={handleReset}
-              forceReset={forceResetExtraction}
-              onForceResetHandled={() => setForceResetExtraction(false)}
-            />
+            {/* Show extraction results or loading spinner in the results area */}
+            <div className="mt-8 w-full">
+              <ExtractionProcessor
+                selectedImage={selectedImage}
+                onReset={handleReset}
+                forceReset={forceResetExtraction}
+                onForceResetHandled={() => setForceResetExtraction(false)}
+                extractionResult={extractionResult}
+                isProcessing={isProcessing}
+                error={error}
+              />
+            </div>
           </div>
         </section>
 
