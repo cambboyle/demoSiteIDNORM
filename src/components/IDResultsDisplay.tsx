@@ -1,5 +1,3 @@
-// IDResultsDisplay presents the extracted data from an ID document in a tabbed interface.
-// It organizes and displays summary info, all fields, MRZ, barcode, and the document image.
 import { useState } from "react";
 import {
   Card,
@@ -350,21 +348,77 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
 
             {/* Summary Tab */}
             <TabsContent value="summary">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="md:col-span-2">
-                  <CardHeader>
-                    <CardTitle>Document Information</CardTitle>
-                    <CardDescription>
-                      Key information extracted from your ID
-                    </CardDescription>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-start">
+                {/* Document Image and Visual Fields (left on desktop) */}
+                <Card className="p-0 md:col-span-1 flex flex-col items-center justify-center">
+                  <CardContent className="p-2 flex flex-col items-center w-full">
+                    {documentImage ? (
+                      <img
+                        src={documentImage}
+                        alt="Document"
+                        className="max-w-full max-h-40 object-contain mb-2 pt-4"
+                        style={{ width: "100%", height: "auto" }}
+                      />
+                    ) : (
+                      <div className="py-8 text-center text-muted-foreground w-full text-xs">
+                        No document image
+                      </div>
+                    )}
+                    {/* Extra visual fields (face, signature, etc) */}
+                    {allVisualFields.length > 0 && (
+                      <div className="flex flex-wrap gap-4 w-full justify-center mt-2">
+                        {allVisualFields.map((vf, idx) => (
+                          <div
+                            key={idx}
+                            className="flex flex-col items-center max-w-[90px]"
+                          >
+                            <span className="text-xs text-muted-foreground mb-1">
+                              {vf.type.replace("TYPE_", "").replace(/_/g, " ")}
+                            </span>
+                            <img
+                              src={`data:image/jpeg;base64,${vf.image}`}
+                              alt={vf.type}
+                              className="max-h-16 object-contain rounded border"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                  <CardFooter className="pt-2 flex flex-wrap gap-1 justify-center">
+                    {/* Show parsed classification results, hide if not available */}
+                    {classifications
+                      .filter(({ value }) => value && value !== "NOT_AVAILABLE")
+                      .map(({ key, value }) => (
+                        <span
+                          key={key}
+                          className="bg-blue-50 text-blue-800 px-2 py-0.5 rounded-full text-xs"
+                        >
+                          {/* Format key for display, e.g. 'countryCode' -> 'Country Code' */}
+                          {key
+                            .replace(/([A-Z])/g, " $1")
+                            .replace(/^./, (str) => str.toUpperCase())
+                            .replace(/_/g, " ")}
+                          : {value}
+                        </span>
+                      ))}
+                  </CardFooter>
+                </Card>
+
+                {/* Key Fields (center/right on desktop) */}
+                <Card className="md:col-span-2 p-0">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">
+                      Document Information
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <h4 className="text-sm font-medium text-muted-foreground mb-1">
+                  <CardContent className="p-2 px-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                      <div className="mb-2">
+                        <span className="block text-xs text-muted-foreground mb-0.5">
                           Full Name
-                        </h4>
-                        <p className="text-lg font-medium">
+                        </span>
+                        <span className="font-semibold text-base">
                           {fieldDict["TYPE_FULL_NAME"]?.value ||
                             (fieldDict["TYPE_FIRST_NAME"] &&
                             fieldDict["TYPE_LAST_NAME"]
@@ -372,158 +426,64 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                               : fieldDict["TYPE_FIRST_NAME"]?.value ||
                                 fieldDict["TYPE_LAST_NAME"]?.value ||
                                 "Not available")}
-                        </p>
+                        </span>
                       </div>
-                      <div>
-                        <h4 className="text-sm font-medium text-muted-foreground mb-1">
+                      <div className="mb-2">
+                        <span className="block text-xs text-muted-foreground mb-0.5">
                           Date of Birth
-                        </h4>
-                        <p className="text-lg font-medium">
+                        </span>
+                        <span className="font-semibold text-base">
                           {fieldDict["TYPE_DATE_OF_BIRTH"]?.value ||
                             extractionData.data?.mrz?.fields?.birthdate ||
                             extractionData.data?.pdf417Barcode?.dateOfBirth ||
                             "Not available"}
-                        </p>
+                        </span>
                       </div>
-                      <div>
-                        <h4 className="text-sm font-medium text-muted-foreground mb-1">
+                      <div className="mb-2">
+                        <span className="block text-xs text-muted-foreground mb-0.5">
                           Nationality
-                        </h4>
-                        <p className="text-lg font-medium">
+                        </span>
+                        <span className="font-semibold text-base">
                           {fieldDict["TYPE_NATIONALITY"]?.value ||
                             extractionData.data?.mrz?.fields?.nationality ||
                             extractionData.data?.pdf417Barcode?.nationality ||
                             extractionData.data?.pdf417Barcode
                               ?.countryIdentification ||
                             "Not available"}
-                        </p>
+                        </span>
                       </div>
-                      <div>
-                        <h4 className="text-sm font-medium text-muted-foreground mb-1">
-                          Gender/Sex
-                        </h4>
-                        <p className="text-lg font-medium">
-                          {(() => {
-                            const sexFieldRaw = extractionData.data?.sexField;
-                            let sexValue: string | undefined = undefined;
-                            let rawValue: string | undefined = undefined;
-                            if (sexFieldRaw) {
-                              if (Array.isArray(sexFieldRaw)) {
-                                if (sexFieldRaw.length > 0) {
-                                  // Parsed value (e.g., MALE/FEMALE/UNSPECIFIED)
-                                  sexValue =
-                                    sexFieldRaw[0].sex &&
-                                    sexFieldRaw[0].sex !== "UNKNOWN" &&
-                                    sexFieldRaw[0].sex !== "UNSPECIFIED"
-                                      ? sexFieldRaw[0].sex
-                                      : sexFieldRaw[0].value &&
-                                        sexFieldRaw[0].value !== "UNKNOWN" &&
-                                        sexFieldRaw[0].value !== "UNSPECIFIED"
-                                      ? sexFieldRaw[0].value
-                                      : undefined;
-                                  // Raw value (e.g., M/F/X)
-                                  rawValue =
-                                    sexFieldRaw[0].value &&
-                                    sexFieldRaw[0].value !== sexValue
-                                      ? sexFieldRaw[0].value
-                                      : undefined;
-                                }
-                              } else if (
-                                typeof sexFieldRaw === "object" &&
-                                sexFieldRaw !== null
-                              ) {
-                                const obj: {
-                                  sex?: string;
-                                  value?: string;
-                                  segments?: Array<{ value?: string }>;
-                                } = sexFieldRaw;
-                                if (
-                                  typeof obj.sex === "string" &&
-                                  obj.sex !== "UNKNOWN" &&
-                                  obj.sex !== "UNSPECIFIED"
-                                ) {
-                                  sexValue = obj.sex;
-                                } else if (
-                                  Array.isArray(obj.segments) &&
-                                  obj.segments.length > 0
-                                ) {
-                                  const seg = obj.segments[0];
-                                  if (
-                                    seg.value &&
-                                    seg.value !== "UNKNOWN" &&
-                                    seg.value !== "UNSPECIFIED"
-                                  ) {
-                                    sexValue = seg.value;
-                                  }
-                                }
-                                if (
-                                  typeof obj.value === "string" &&
-                                  obj.value !== sexValue
-                                ) {
-                                  rawValue = obj.value;
-                                }
-                              }
-                            }
-                            // Fallbacks
-                            if (!sexValue) {
-                              sexValue =
-                                extractionData.data?.mrz?.fields?.sex ||
-                                extractionData.data?.pdf417Barcode?.gender;
-                            }
-                            // Compose display
-                            if (sexValue && rawValue && sexValue !== rawValue) {
-                              return `${sexValue} (${rawValue})`;
-                            } else if (sexValue) {
-                              return sexValue;
-                            } else {
-                              return "Not available";
-                            }
-                          })()}
-                        </p>
+                      <div className="mb-2">
+                        <span className="block text-xs text-muted-foreground mb-0.5">
+                          Sex
+                        </span>
+                        <span className="font-semibold text-base">
+                          {fieldDict["TYPE_SEX"]?.value ||
+                            extractionData.data?.mrz?.fields?.sex ||
+                            extractionData.data?.pdf417Barcode?.gender ||
+                            "Not available"}
+                        </span>
                       </div>
-                      <div>
-                        <h4 className="text-sm font-medium text-muted-foreground mb-1">
+                      <div className="mb-2">
+                        <span className="block text-xs text-muted-foreground mb-0.5">
                           ID Number
-                        </h4>
-                        <p className="text-lg font-medium">
-                          {/* Use robust extraction utility for document number */}
+                        </span>
+                        <span className="font-semibold text-base">
                           {extractDocumentNumber(extractionData) ||
                             "Not available"}
-                        </p>
+                        </span>
                       </div>
-                      <div>
-                        <h4 className="text-sm font-medium text-muted-foreground mb-1">
+                      <div className="mb-2">
+                        <span className="block text-xs text-muted-foreground mb-0.5">
                           Expiry Date
-                        </h4>
-                        <p className="text-lg font-medium">
+                        </span>
+                        <span className="font-semibold text-base">
                           {fieldDict["TYPE_EXPIRY_DATE"]?.value ||
                             "Not available"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="pt-2">
-                      <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                        Document Type
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {classifications.map(({ key, value }) => (
-                          <div
-                            key={key}
-                            className="bg-blue-50 text-blue-800 px-3 py-1 rounded-full text-sm"
-                          >
-                            {value}
-                          </div>
-                        ))}
-                        {classifications.length === 0 && (
-                          <p className="text-muted-foreground">
-                            No classification available
-                          </p>
-                        )}
+                        </span>
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter>
+                  <CardFooter className="pt-2 flex justify-end">
                     <Button
                       variant="outline"
                       size="sm"
@@ -556,46 +516,6 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                     </Button>
                   </CardFooter>
                 </Card>
-
-                <div className="flex flex-col gap-4">
-                  {/* Show all visual fields (face, signature, document, etc) */}
-                  {(allVisualFields.length > 0 || documentImage) && (
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-base">
-                          Visual Fields
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="flex flex-col gap-4 items-center">
-                        {allVisualFields.map((vf, idx) => (
-                          <div key={idx} className="flex flex-col items-center">
-                            <span className="text-xs text-muted-foreground mb-1">
-                              {vf.type.replace("TYPE_", "").replace(/_/g, " ")}
-                            </span>
-                            <img
-                              src={`data:image/jpeg;base64,${vf.image}`}
-                              alt={vf.type}
-                              className="max-h-32 object-contain rounded border"
-                            />
-                          </div>
-                        ))}
-                        {/* Add the document image as a visual field if available */}
-                        {documentImage && (
-                          <div className="flex flex-col items-center">
-                            <span className="text-xs text-muted-foreground mb-1">
-                              DOCUMENT IMAGE
-                            </span>
-                            <img
-                              src={documentImage}
-                              alt="Document Used"
-                              className="max-h-48 object-contain rounded border"
-                            />
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
               </div>
             </TabsContent>
 
@@ -847,47 +767,84 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
             <TabsContent value="document">
               <Card>
                 <CardHeader>
-                  <CardTitle>Document Image</CardTitle>
+                  <CardTitle>Document Image & Visual Fields</CardTitle>
                   <CardDescription>
-                    The processed document image with detected regions
+                    The processed document image, all detected visual fields,
+                    and document classification
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="flex justify-center p-0">
-                  {documentImage ? (
-                    <img
-                      src="/placeholder.svg"
-                      alt="Document"
-                      className="max-w-full object-contain rounded-b-lg"
-                      style={{ maxHeight: "500px" }}
-                    />
-                  ) : (
-                    <div className="py-12 text-center text-muted-foreground w-full">
-                      No document image available
-                    </div>
-                  )}
-                </CardContent>
-                <CardFooter className="pt-6">
-                  <div className="w-full">
-                    <h4 className="text-sm font-medium mb-2">
-                      Document Classification
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {classifications.map(({ key, value }) => (
-                        <div
-                          key={key}
-                          className="bg-blue-50 text-blue-800 px-3 py-1 rounded-full text-sm"
-                        >
-                          {key}: {value}
+                <CardContent className="p-4">
+                  <div className="flex flex-col md:flex-row gap-6 w-full">
+                    {/* Left: Document image and visual fields */}
+                    <div className="flex-1 flex flex-col items-center gap-4 min-w-[220px]">
+                      {documentImage ? (
+                        <img
+                          src={documentImage}
+                          alt="Document"
+                          className="max-w-full object-contain rounded-lg border shadow"
+                          style={{ maxHeight: "300px" }}
+                        />
+                      ) : (
+                        <div className="py-12 text-center text-muted-foreground w-full">
+                          No document image available
                         </div>
-                      ))}
-                      {classifications.length === 0 && (
-                        <p className="text-muted-foreground">
+                      )}
+                      {/* Visual fields (face, signature, etc) */}
+                      {allVisualFields.length > 0 && (
+                        <div className="flex flex-wrap gap-4 w-full justify-center mt-2">
+                          {allVisualFields.map((vf, idx) => (
+                            <div
+                              key={idx}
+                              className="flex flex-col items-center max-w-[120px]"
+                            >
+                              <span className="text-xs text-muted-foreground mb-1">
+                                {vf.type
+                                  .replace("TYPE_", "")
+                                  .replace(/_/g, " ")}
+                              </span>
+                              <img
+                                src={`data:image/jpeg;base64,${vf.image}`}
+                                alt={vf.type}
+                                className="max-h-20 object-contain rounded border"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {/* Right: Document classification, left-aligned to images */}
+                    <div className="flex-1 flex flex-col justify-start min-w-[220px] md:pl-4 md:pt-2">
+                      <h4 className="text-sm font-semibold mb-2 text-muted-foreground text-left">
+                        Document Classification
+                      </h4>
+                      {classifications.length > 0 ? (
+                        <table className="w-auto text-sm border-separate border-spacing-y-1 text-left">
+                          <tbody>
+                            {classifications.map(({ key, value }) => (
+                              <tr key={key}>
+                                <td className="pr-2 text-muted-foreground whitespace-nowrap font-medium text-left align-top">
+                                  {key
+                                    .replace(/([A-Z])/g, " $1")
+                                    .replace(/^./, (str) => str.toUpperCase())
+                                    .replace(/_/g, " ")}
+                                </td>
+                                <td className="pl-2 align-top">
+                                  <span className="bg-blue-50 text-blue-800 px-2 py-0.5 rounded-full">
+                                    {value}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      ) : (
+                        <p className="text-muted-foreground text-left">
                           No classification available
                         </p>
                       )}
                     </div>
                   </div>
-                </CardFooter>
+                </CardContent>
               </Card>
             </TabsContent>
           </Tabs>
