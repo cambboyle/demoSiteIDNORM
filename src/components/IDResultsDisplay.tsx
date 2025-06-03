@@ -319,6 +319,9 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
     body: apiRequest,
   };
 
+  // Helper: get all visual fields
+  const allVisualFields = extractionData.data?.visualField || [];
+
   return (
     <div className="my-8" id="results-section">
       <h2 className="text-2xl font-bold text-center mb-6">
@@ -555,32 +558,40 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                 </Card>
 
                 <div className="flex flex-col gap-4">
-                  {faceImage && (
+                  {/* Show all visual fields (face, signature, document, etc) */}
+                  {(allVisualFields.length > 0 || documentImage) && (
                     <Card>
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-base">ID Photo</CardTitle>
+                        <CardTitle className="text-base">
+                          Visual Fields
+                        </CardTitle>
                       </CardHeader>
-                      <CardContent className="flex justify-center">
-                        <img
-                          src={`data:image/jpeg;base64,${faceImage}`}
-                          alt="ID Face Photo"
-                          className="max-h-48 object-contain rounded"
-                        />
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {signatureImage && (
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-base">Signature</CardTitle>
-                      </CardHeader>
-                      <CardContent className="flex justify-center bg-gray-50 p-4 rounded">
-                        <img
-                          src={`data:image/jpeg;base64,${signatureImage}`}
-                          alt="ID Signature"
-                          className="max-h-24 object-contain"
-                        />
+                      <CardContent className="flex flex-col gap-4 items-center">
+                        {allVisualFields.map((vf, idx) => (
+                          <div key={idx} className="flex flex-col items-center">
+                            <span className="text-xs text-muted-foreground mb-1">
+                              {vf.type.replace("TYPE_", "").replace(/_/g, " ")}
+                            </span>
+                            <img
+                              src={`data:image/jpeg;base64,${vf.image}`}
+                              alt={vf.type}
+                              className="max-h-32 object-contain rounded border"
+                            />
+                          </div>
+                        ))}
+                        {/* Add the document image as a visual field if available */}
+                        {documentImage && (
+                          <div className="flex flex-col items-center">
+                            <span className="text-xs text-muted-foreground mb-1">
+                              DOCUMENT IMAGE
+                            </span>
+                            <img
+                              src={documentImage}
+                              alt="Document Used"
+                              className="max-h-48 object-contain rounded border"
+                            />
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   )}
