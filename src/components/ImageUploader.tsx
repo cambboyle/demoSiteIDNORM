@@ -657,7 +657,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                   autoPlay
                   playsInline
                   muted
-                  className={`w-full object-cover ${
+                  className={`w-full object-contain ${
                     isMobile ? "h-[calc(100vh-120px)]" : "h-[60vh]"
                   } bg-[#333]`}
                   style={
@@ -665,7 +665,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                       ? {
                           maxWidth: "100vw",
                           maxHeight: "100vh",
-                          objectFit: "cover",
+                          objectFit: "contain",
                           display: "block",
                         }
                       : {

@@ -116,11 +116,25 @@ const Index = () => {
         "@/services/extractionService"
       );
       const result = await extractDocumentDataReal(base64Image);
-      setExtractionResult({
-        ...result.data.response,
-        request: requestBody,
-        response: result.data.response,
-      });
+      // Check for invalid image or no document found
+      if (
+        !result.success ||
+        result.data?.response?.status !== "STATUS_OK" ||
+        !result.data?.response?.data ||
+        (
+          (!result.data.response.data.textField || result.data.response.data.textField.length === 0) &&
+          (!result.data.response.data.mrz || !result.data.response.data.mrz.fields || Object.keys(result.data.response.data.mrz.fields).length === 0)
+        )
+      ) {
+        setError("No document found in image or the image is invalid. Please try again with a clearer photo.");
+        setExtractionResult(null);
+      } else {
+        setExtractionResult({
+          ...result.data.response,
+          request: requestBody,
+          response: result.data.response,
+        });
+      }
     } catch (err) {
       setError("An unexpected error occurred. Please try again later.");
     } finally {
