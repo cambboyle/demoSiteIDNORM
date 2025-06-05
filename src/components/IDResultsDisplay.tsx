@@ -165,10 +165,11 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
   }
 
   // Process sex fields
-  const sexFields = Array.isArray(extractionData.data?.sexField)
-    ? extractionData.data.sexField
-    : extractionData.data?.sexField
-    ? [extractionData.data.sexField]
+  const sexFieldsRaw = extractionData.data?.sexField;
+  const sexFields = Array.isArray(sexFieldsRaw)
+    ? sexFieldsRaw
+    : sexFieldsRaw
+    ? [sexFieldsRaw]
     : [];
   if (sexFields.length > 0) {
     let dummy_id = 0;
@@ -457,10 +458,12 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                           Sex
                         </span>
                         <span className="font-semibold text-base">
-                          {fieldDict["TYPE_SEX"]?.value ||
-                            extractionData.data?.mrz?.fields?.sex ||
-                            extractionData.data?.pdf417Barcode?.gender ||
-                            "Not available"}
+                          {extractSexValue({
+                            sexFields,
+                            textFields: extractionData.data?.textField || [],
+                            mrz: extractionData.data?.mrz,
+                            barcode: extractionData.data?.pdf417Barcode,
+                          }) || "Not available"}
                         </span>
                       </div>
                       <div className="mb-2">
@@ -499,7 +502,13 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                                   : undefined),
                               dob: fieldDict["TYPE_DATE_OF_BIRTH"]?.value,
                               nationality: fieldDict["TYPE_NATIONALITY"]?.value,
-                              sex: fieldDict["TYPE_SEX"]?.value,
+                              sex: extractSexValue({
+                                sexFields,
+                                textFields:
+                                  extractionData.data?.textField || [],
+                                mrz: extractionData.data?.mrz,
+                                barcode: extractionData.data?.pdf417Barcode,
+                              }),
                               idNumber:
                                 fieldDict["TYPE_DOCUMENT_NUMBER"]?.value,
                               expiryDate: fieldDict["TYPE_EXPIRY_DATE"]?.value,
@@ -556,41 +565,27 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                       },
                     ];
                     const textFields = extractionData.data?.textField || [];
-                    const sexFields = extractionData.data?.sexField || [];
-                    const getRawSex = (item: {
-                      value: string;
-                      segments?: Array<{ value?: string }>;
-                    }) => {
-                      let rawSex = item.value;
-                      if (
-                        (!rawSex ||
-                          rawSex === "" ||
-                          rawSex === "UNKNOWN" ||
-                          rawSex === "UNSPECIFIED") &&
-                        Array.isArray(item.segments) &&
-                        item.segments.length > 0
-                      ) {
-                        const seg = item.segments.find(
-                          (seg) =>
-                            seg.value &&
-                            seg.value !== "UNKNOWN" &&
-                            seg.value !== "UNSPECIFIED"
-                        );
-                        if (seg) rawSex = seg.value;
-                      }
-                      return rawSex;
-                    };
-                    const textFieldMap = Object.fromEntries(
-                      textFields.map((item) => [item.type.toLowerCase(), item])
-                    );
-                    // Collect all fields to display in order
+                    // --- Use extractSexValue helper for Sex field ---
                     const rows: Array<{ label: string; value: string }> = [];
                     order.forEach((field) => {
-                      if (field.key === "Sex" && sexFields.length > 0) {
-                        const item = sexFields[0];
-                        const rawSex = getRawSex(item);
-                        rows.push({ label: "Sex", value: rawSex });
+                      if (field.key === "Sex") {
+                        const sexValue = extractSexValue({
+                          sexFields,
+                          textFields,
+                          mrz: extractionData.data?.mrz,
+                          barcode: extractionData.data?.pdf417Barcode,
+                        });
+                        rows.push({
+                          label: "Sex",
+                          value: sexValue || "Not available",
+                        });
                       } else {
+                        const textFieldMap = Object.fromEntries(
+                          textFields.map((item) => [
+                            item.type?.toLowerCase?.(),
+                            item,
+                          ])
+                        );
                         const type = field.types.find((t) => t in textFieldMap);
                         if (type) {
                           const item = textFieldMap[type];
@@ -611,7 +606,7 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                     // Add any other sex fields not in the order
                     if (sexFields.length > 1) {
                       sexFields.slice(1).forEach((item, idx) => {
-                        const rawSex = getRawSex(item);
+                        const rawSex = item.sex || item.value || "";
                         rows.push({ label: `Sex (${idx + 2})`, value: rawSex });
                       });
                     }
@@ -869,5 +864,122 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
     </div>
   );
 };
+
+// Helper type guard for text fields with a 'sex' property
+function hasSexProp(obj: unknown): obj is { sex: string } {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    "sex" in obj &&
+    typeof (obj as { sex?: unknown }).sex === "string"
+  );
+}
+
+// Helper to check if a value is meaningful
+const isValidSex = (val: unknown) =>
+  typeof val === "string" &&
+  val.trim() !== "" &&
+  val.trim().toUpperCase() !== "UNKNOWN" &&
+  val.trim().toUpperCase() !== "UNSPECIFIED";
+
+// Robust helper to extract the Sex value from all possible sources
+function extractSexValue({
+  sexFields,
+  textFields,
+  mrz,
+  barcode,
+}: {
+  sexFields: Array<unknown>;
+  textFields: Array<unknown>;
+  mrz?: { fields?: Record<string, unknown> };
+  barcode?: Record<string, unknown>;
+}): string | undefined {
+  // 1. Prefer first valid value from sexFields
+  const getRawSex = (item: unknown) => {
+    if (typeof item !== "object" || item === null) return "";
+    const obj = item as Record<string, unknown>;
+    let rawSex =
+      (typeof obj.sex === "string" ? obj.sex : undefined) ||
+      (typeof obj.value === "string" ? obj.value : undefined) ||
+      "";
+    if (
+      (!rawSex ||
+        rawSex === "" ||
+        rawSex === "UNKNOWN" ||
+        rawSex === "UNSPECIFIED") &&
+      Array.isArray(obj.segments) &&
+      obj.segments.length > 0
+    ) {
+      const seg = (obj.segments as unknown[]).find(
+        (seg) =>
+          typeof seg === "object" &&
+          seg !== null &&
+          typeof (seg as Record<string, unknown>).value === "string" &&
+          (seg as Record<string, unknown>).value !== "UNKNOWN" &&
+          (seg as Record<string, unknown>).value !== "UNSPECIFIED"
+      );
+      if (seg && typeof (seg as Record<string, unknown>).value === "string")
+        rawSex = String((seg as Record<string, unknown>).value);
+    }
+    return rawSex;
+  };
+  for (const item of sexFields) {
+    const rawSex = getRawSex(item);
+    if (isValidSex(rawSex)) return rawSex;
+  }
+  // 2. textField: TYPE_SEX, sex, type_gender, gender (prefer first valid)
+  const textFieldMap = Object.fromEntries(
+    textFields.map((item) => {
+      if (
+        typeof item === "object" &&
+        item !== null &&
+        "type" in item &&
+        typeof (item as Record<string, unknown>).type === "string"
+      ) {
+        return [
+          String((item as Record<string, unknown>).type).toLowerCase(),
+          item,
+        ];
+      }
+      return [undefined, item];
+    })
+  );
+  const tfTypes = ["type_sex", "sex", "type_gender", "gender"];
+  for (const t of tfTypes) {
+    if (t in textFieldMap) {
+      const item = textFieldMap[t];
+      if (typeof item === "object" && item !== null) {
+        if (hasSexProp(item) && isValidSex(item.sex)) return item.sex;
+        if (
+          "value" in item &&
+          typeof (item as Record<string, unknown>).value === "string" &&
+          isValidSex((item as Record<string, unknown>).value)
+        ) {
+          return String((item as Record<string, unknown>).value);
+        }
+      }
+    }
+  }
+  // 3. Any textField with a 'sex' property
+  const fallback = textFields.find(
+    (item) => hasSexProp(item) && isValidSex((item as { sex: string }).sex)
+  );
+  if (fallback && hasSexProp(fallback)) return fallback.sex;
+  // 4. MRZ
+  const mrzSex = mrz?.fields?.sex;
+  if (typeof mrzSex === "string" && isValidSex(mrzSex)) return String(mrzSex);
+  // 5. Barcode
+  const barcodeGender = barcode?.gender;
+  if (typeof barcodeGender === "string" && isValidSex(barcodeGender)) {
+    return String(barcodeGender);
+  } else if (typeof barcodeGender === "number") {
+    if (barcodeGender === 1) return "M";
+    if (barcodeGender === 2) return "F";
+    if (barcodeGender !== 0) return String(barcodeGender);
+  }
+  // 6. Not found
+  // Uncomment for debug: console.debug("Sex not found", { sexFields, textFields, mrz, barcode });
+  return undefined;
+}
 
 export default IDResultsDisplay;
