@@ -532,144 +532,129 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Define the desired order of fields */}
-                    {(() => {
-                      const order = [
-                        {
-                          key: "id number",
-                          types: [
-                            "type_document_identity_number", // Correct API type
-                            "type_document_id_number",
-                            "type_document_number",
-                            "type_id_number",
-                            "type_personal_identity_number",
-                          ],
-                        },
-                        { key: "last_name", types: ["type_last_name"] },
-                        { key: "first_name", types: ["type_first_name"] },
-                        { key: "nationality", types: ["type_nationality"] },
-                        { key: "sex", types: ["sex"] },
-                        {
-                          key: "place of birth",
-                          types: ["type_place_of_birth"],
-                        },
-                        {
-                          key: "issuing authority",
-                          types: ["type_issuing_authority"],
-                        },
-                      ];
-                      // Collect all text fields and sex fields
-                      const textFields = extractionData.data?.textField || [];
-                      const sexFields = extractionData.data?.sexField || [];
-                      // Helper to get the raw value for sex
-                      const getRawSex = (item: {
-                        value: string;
-                        segments?: Array<{ value?: string }>;
-                      }) => {
-                        let rawSex = item.value;
-                        if (
-                          (!rawSex ||
-                            rawSex === "" ||
-                            rawSex === "UNKNOWN" ||
-                            rawSex === "UNSPECIFIED") &&
-                          Array.isArray(item.segments) &&
-                          item.segments.length > 0
-                        ) {
-                          const seg = item.segments.find(
-                            (seg) =>
-                              seg.value &&
-                              seg.value !== "UNKNOWN" &&
-                              seg.value !== "UNSPECIFIED"
-                          );
-                          if (seg) rawSex = seg.value;
+                  {/* Compact table layout for fields */}
+                  {(() => {
+                    const order = [
+                      {
+                        key: "ID Number",
+                        types: [
+                          "type_document_identity_number",
+                          "type_document_id_number",
+                          "type_document_number",
+                          "type_id_number",
+                          "type_personal_identity_number",
+                        ],
+                      },
+                      { key: "Last Name", types: ["type_last_name"] },
+                      { key: "First Name", types: ["type_first_name"] },
+                      { key: "Nationality", types: ["type_nationality"] },
+                      { key: "Sex", types: ["sex"] },
+                      { key: "Place of Birth", types: ["type_place_of_birth"] },
+                      {
+                        key: "Issuing Authority",
+                        types: ["type_issuing_authority"],
+                      },
+                    ];
+                    const textFields = extractionData.data?.textField || [];
+                    const sexFields = extractionData.data?.sexField || [];
+                    const getRawSex = (item: {
+                      value: string;
+                      segments?: Array<{ value?: string }>;
+                    }) => {
+                      let rawSex = item.value;
+                      if (
+                        (!rawSex ||
+                          rawSex === "" ||
+                          rawSex === "UNKNOWN" ||
+                          rawSex === "UNSPECIFIED") &&
+                        Array.isArray(item.segments) &&
+                        item.segments.length > 0
+                      ) {
+                        const seg = item.segments.find(
+                          (seg) =>
+                            seg.value &&
+                            seg.value !== "UNKNOWN" &&
+                            seg.value !== "UNSPECIFIED"
+                        );
+                        if (seg) rawSex = seg.value;
+                      }
+                      return rawSex;
+                    };
+                    const textFieldMap = Object.fromEntries(
+                      textFields.map((item) => [item.type.toLowerCase(), item])
+                    );
+                    // Collect all fields to display in order
+                    const rows: Array<{ label: string; value: string }> = [];
+                    order.forEach((field) => {
+                      if (field.key === "Sex" && sexFields.length > 0) {
+                        const item = sexFields[0];
+                        const rawSex = getRawSex(item);
+                        rows.push({ label: "Sex", value: rawSex });
+                      } else {
+                        const type = field.types.find((t) => t in textFieldMap);
+                        if (type) {
+                          const item = textFieldMap[type];
+                          rows.push({ label: field.key, value: item.value });
                         }
-                        return rawSex;
-                      };
-                      // Map for quick lookup by lowercased type
-                      const textFieldMap = Object.fromEntries(
-                        textFields.map((item) => [
-                          item.type
-                            .toLowerCase()
-                            .replace(
-                              "document_id_number",
-                              "document_id_number"
-                            ),
-                          item,
-                        ])
-                      );
-                      // Render fields in the specified order
-                      return order.map((field, idx) => {
-                        if (field.key === "sex" && sexFields.length > 0) {
-                          // Only show the first sex field
-                          const item = sexFields[0];
-                          const rawSex = getRawSex(item);
-                          return (
-                            <ResultCard key={field.key + idx}>
-                              <div className="bg-muted px-4 py-2 border-b flex justify-between items-center">
-                                <h4 className="font-medium text-sm font-mono">
-                                  sex
-                                </h4>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 w-7 p-0"
-                                  onClick={() => copyToClipboard(rawSex || "")}
-                                >
-                                  <ClipboardCopy size={14} />
-                                </Button>
-                              </div>
-                              <div className="p-4">
-                                <p className="font-medium font-mono">
-                                  {rawSex}
-                                </p>
-                              </div>
-                            </ResultCard>
-                          );
-                        } else {
-                          // Find the first matching type for this field
-                          const type = field.types.find(
-                            (t) => t in textFieldMap
-                          );
-                          if (type) {
-                            const item = textFieldMap[type];
-                            return (
-                              <ResultCard key={field.key + idx}>
-                                <div className="bg-muted px-4 py-2 border-b flex justify-between items-center">
-                                  <h4 className="font-medium text-sm font-mono">
-                                    {field.key}
-                                  </h4>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 w-7 p-0"
-                                    onClick={() => copyToClipboard(item.value)}
-                                  >
-                                    <ClipboardCopy size={14} />
-                                  </Button>
-                                </div>
-                                <div className="p-4">
-                                  <p className="font-medium font-mono">
-                                    {item.value}
-                                  </p>
-                                </div>
-                              </ResultCard>
-                            );
-                          }
-                        }
-                        return null;
+                      }
+                    });
+                    // Add any other text fields not in the order
+                    textFields.forEach((item) => {
+                      const label = item.type
+                        .replace("TYPE_", "")
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (l) => l.toUpperCase());
+                      if (!rows.find((row) => row.value === item.value)) {
+                        rows.push({ label, value: item.value });
+                      }
+                    });
+                    // Add any other sex fields not in the order
+                    if (sexFields.length > 1) {
+                      sexFields.slice(1).forEach((item, idx) => {
+                        const rawSex = getRawSex(item);
+                        rows.push({ label: `Sex (${idx + 2})`, value: rawSex });
                       });
-                    })()}
-                    {/* Fallback for no fields */}
-                    {(!extractionData.data?.textField ||
-                      extractionData.data.textField.length === 0) &&
-                      (!extractionData.data?.sexField ||
-                        extractionData.data.sexField.length === 0) && (
-                        <div className="col-span-2 py-8 text-center text-muted-foreground">
+                    }
+                    if (rows.length === 0) {
+                      return (
+                        <div className="py-8 text-center text-muted-foreground">
                           No text fields were extracted from this document
                         </div>
-                      )}
-                  </div>
+                      );
+                    }
+                    return (
+                      <div className="overflow-x-auto flex justify-start">
+                        <table className="text-sm border-separate border-spacing-0 w-1/3 min-w-[320px] max-w-[600px]">
+                          <tbody>
+                            {rows.map((row, idx) => (
+                              <tr
+                                key={row.label + idx}
+                                className="hover:bg-muted/50"
+                              >
+                                <td className="font-medium text-muted-foreground whitespace-nowrap text-left align-top">
+                                  {row.label}
+                                </td>
+                                <td className="align-top font-mono break-all">
+                                  {row.value}
+                                </td>
+                                <td className="align-top">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-5 w-5 p-0 min-w-0"
+                                    onClick={() => copyToClipboard(row.value)}
+                                    aria-label={`Copy ${row.label}`}
+                                  >
+                                    <ClipboardCopy size={12} />
+                                  </Button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })()}
                 </CardContent>
               </Card>
             </TabsContent>
