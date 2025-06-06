@@ -782,22 +782,25 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             <div className="flex flex-col md:flex-row items-center justify-center gap-6">
               <div className="w-48 h-48 bg-gray-100 flex items-center justify-center border">
                 <img
-                  src="/placeholder.svg"
+                  src="/images/IDNORMQRCODE.png"
                   alt="QR Code"
                   className="max-w-full max-h-full"
                 />
               </div>
-              <div className="text-left">
+              <div className="text-left w-full flex flex-col items-center md:items-start">
                 <p className="mb-4">Scan to access the site on mobile</p>
-                <Button
-                  onClick={() => {
-                    setShowQrCode(false);
-                    setShowPhotoOptions(true);
-                  }}
-                  className="btn-outline"
-                >
-                  Back
-                </Button>
+                <div className="w-full flex justify-center">
+                  <Button
+                    onClick={() => {
+                      setShowQrCode(false);
+                      setShowPhotoOptions(true);
+                    }}
+                    className="btn-outline mx-auto"
+                    style={{ minWidth: 120 }}
+                  >
+                    Back
+                  </Button>
+                </div>
               </div>
             </div>
             <Button
