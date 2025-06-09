@@ -624,7 +624,7 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                       );
                     }
                     return (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-1">
                         {rows.map((row, idx) => (
                           <ResultCard key={row.label + idx}>
                             <div className="bg-muted px-2 border-b flex justify-between items-center">
