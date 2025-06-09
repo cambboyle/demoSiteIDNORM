@@ -541,7 +541,6 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {/* Compact table layout for fields */}
                   {(() => {
                     const order = [
                       {
@@ -575,10 +574,12 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                           mrz: extractionData.data?.mrz,
                           barcode: extractionData.data?.pdf417Barcode,
                         });
-                        rows.push({
-                          label: "Sex",
-                          value: sexValue || "Not available",
-                        });
+                        if (sexValue) {
+                          rows.push({
+                            label: "Sex",
+                            value: sexValue,
+                          });
+                        }
                       } else {
                         const textFieldMap = Object.fromEntries(
                           textFields.map((item) => [
@@ -607,7 +608,12 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                     if (sexFields.length > 1) {
                       sexFields.slice(1).forEach((item, idx) => {
                         const rawSex = item.sex || item.value || "";
-                        rows.push({ label: `Sex (${idx + 2})`, value: rawSex });
+                        if (rawSex) {
+                          rows.push({
+                            label: `Sex (${idx + 2})`,
+                            value: rawSex,
+                          });
+                        }
                       });
                     }
                     if (rows.length === 0) {
@@ -618,35 +624,29 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                       );
                     }
                     return (
-                      <div className="overflow-x-auto flex justify-start">
-                        <table className="text-sm border-separate border-spacing-0 w-1/3 min-w-[320px] max-w-[600px]">
-                          <tbody>
-                            {rows.map((row, idx) => (
-                              <tr
-                                key={row.label + idx}
-                                className="hover:bg-muted/50"
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
+                        {rows.map((row, idx) => (
+                          <ResultCard key={row.label + idx}>
+                            <div className="bg-muted px-2 border-b flex justify-between items-center">
+                              <h4 className="font-medium text-sm">
+                                {row.label}
+                              </h4>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 w-7 p-0"
+                                onClick={() => copyToClipboard(row.value)}
                               >
-                                <td className="font-medium text-muted-foreground whitespace-nowrap text-left align-top">
-                                  {row.label}
-                                </td>
-                                <td className="align-top font-mono break-all">
-                                  {row.value}
-                                </td>
-                                <td className="align-top">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-5 w-5 p-0 min-w-0"
-                                    onClick={() => copyToClipboard(row.value)}
-                                    aria-label={`Copy ${row.label}`}
-                                  >
-                                    <ClipboardCopy size={12} />
-                                  </Button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                                <ClipboardCopy size={14} />
+                              </Button>
+                            </div>
+                            <div className="px-2">
+                              <p className="font-medium font-mono break-all">
+                                {row.value}
+                              </p>
+                            </div>
+                          </ResultCard>
+                        ))}
                       </div>
                     );
                   })()}
@@ -671,7 +671,7 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {mrzFields.map(([key, value]) => (
                         <ResultCard key={key}>
-                          <div className="bg-muted px-4 py-2 border-b flex justify-between items-center">
+                          <div className="bg-muted px-2 border-b flex justify-between items-center">
                             <h4 className="font-medium text-sm">{key}</h4>
                             <Button
                               variant="ghost"
@@ -682,7 +682,7 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                               <ClipboardCopy size={14} />
                             </Button>
                           </div>
-                          <div className="p-4">
+                          <div className="px-2">
                             <p className="font-medium font-mono">{value}</p>
                           </div>
                         </ResultCard>
@@ -715,7 +715,7 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {barcodeFields.map(([key, value]) => (
                         <ResultCard key={key}>
-                          <div className="bg-muted px-4 py-2 border-b flex justify-between items-center">
+                          <div className="bg-muted px-2 border-b flex justify-between items-center">
                             <h4 className="font-medium text-sm">{key}</h4>
                             <Button
                               variant="ghost"
@@ -726,7 +726,7 @@ const IDResultsDisplay: React.FC<IDResultsDisplayProps> = ({
                               <ClipboardCopy size={14} />
                             </Button>
                           </div>
-                          <div className="p-4">
+                          <div className="px-2">
                             <p className="font-medium font-mono break-all">
                               {value}
                             </p>
