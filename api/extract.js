@@ -13,6 +13,10 @@ export default async function handler(req, res) {
   const licenseKey = process.env.IDNORM_LICENSE_KEY;
   const idexServerUrl = process.env.IDEX_SERVER_URL;
 
+  console.log(`[${errorId}] Processing request`);
+  console.log(`[${errorId}] License key present:`, !!licenseKey);
+  console.log(`[${errorId}] Server URL present:`, !!idexServerUrl);
+
   if (!base64Image) {
     return res
       .status(400)
@@ -33,6 +37,8 @@ export default async function handler(req, res) {
       imageJpeg: base64Image,
     };
 
+    console.log(`[${errorId}] Making request to:`, idexServerUrl);
+
     const response = await fetch(idexServerUrl, {
       method: "POST",
       headers: {
@@ -43,22 +49,31 @@ export default async function handler(req, res) {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(
+        `[${errorId}] Error response from idexServerUrl:`,
+        errorText
+      );
       return res.status(500).json({
         success: false,
         message: `[${errorId}] Failed to get valid response for data processing!`,
+        error: errorText,
       });
     }
 
     const apiResponse = await response.json();
+    console.log(`[${errorId}] Success`);
     return res.status(200).json({
       success: true,
       message: "",
       data: { response: apiResponse },
     });
   } catch (error) {
+    console.error(`[${errorId}] Exception:`, error);
     return res.status(500).json({
       success: false,
       message: `[${errorId}] Error while processing provided image!`,
+      error: error.message || error,
     });
   }
 }
